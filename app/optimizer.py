@@ -49,3 +49,10 @@ def optimize_cuts(cuts, stock_length):
         if not placed:
             stocks_used.append([cut])
     return stocks_used
+
+def calculate_waste(stocks_used, stock_length):
+    waste=0
+    for stock in stocks_used:
+        waste+=stock_length-sum(stock)
+    return waste
+    
