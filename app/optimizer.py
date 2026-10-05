@@ -33,3 +33,19 @@ def merge(left, right):
         result.append(right[j])
         j += 1
     return result
+
+
+
+def optimize_cuts(cuts, stock_length):
+    stocks_used = []
+
+    for cut in cuts:
+        placed = False
+        for stock in stocks_used:
+            if sum(stock) + cut <= stock_length:
+                stock.append(cut)
+                placed = True   
+                break
+        if not placed:
+            stocks_used.append([cut])
+    return stocks_used
