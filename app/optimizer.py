@@ -55,4 +55,14 @@ def calculate_waste(stocks_used, stock_length):
     for stock in stocks_used:
         waste+=stock_length-sum(stock)
     return waste
-    
+
+def calculate_utilization(stocks_used, stock_length):
+    total_cut_length = sum(sum(stock) for stock in stocks_used)
+    total_stock_length = len(stocks_used) * stock_length
+
+    utilization = (
+        (total_cut_length / total_stock_length) * 100
+        if total_stock_length > 0
+        else 0
+    )
+    return utilization
