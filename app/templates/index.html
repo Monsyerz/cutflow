@@ -70,7 +70,18 @@
                 </button>
 
             </form>
+                {% if utilization is defined %}
 
+            <div class="results">
+                <h3>Results</h3>
+
+                <p>Stocks: {{ stocks }}</p>
+                <p>Waste: {{ waste }}</p>
+                <p>Utilization: {{ utilization }}%</p>
+            </div>
+
+            {% endif %}
+            
         </div>
 
     </div>

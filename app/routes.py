@@ -29,8 +29,11 @@ def home():
         waste = calculate_waste(stocks, stock_length)
         utilization = calculate_utilization(stocks, stock_length)
 
-        print("Stocks:", stocks)
-        print("Waste:", waste)
-        print("Utilization:", utilization)
+        return render_template  (
+            "index.html",
+            stocks=stocks,
+            waste=waste,
+            utilization=utilization,
+            )
 
     return render_template("index.html")
