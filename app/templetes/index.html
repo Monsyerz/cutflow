@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>CutFlow</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+
+<body>
+
+
+    <div class="nav-bar">
+
+        <h1>CutFlow</h1>
+
+        <div class="nav-links">
+            <a href="#">Home</a>
+            <a href="#">Optimizer</a>
+            <a href="#">About</a>
+        </div>
+
+    </div>
+
+
+    <div class="container">
+
+        <div class="containerA">
+
+            <h2>
+                Smarter cuts.<br>
+                <span>Less waste.</span>
+            </h2>
+
+            <p>
+                CutFlow helps optimize material cutting layouts,
+                reduce waste, and improve stock utilization.
+            </p>
+
+        </div>
+
+
+        <div class="containerB">
+
+            <h3>Cut Optimizer</h3>
+
+            <div class="input-box">
+                <label>Stock Length</label>
+                <input type="number" placeholder="Example: 20">
+            </div>
+
+            <div class="input-box">
+                <label>Cut Length</label>
+                <input type="number" placeholder="Example: 10.5">
+            </div>
+
+            <div class="input-box">
+                <label>Quantity</label>
+                <input type="number" placeholder="Example: 3">
+            </div>
+
+            <button class="button">
+                Optimize
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <div class="footer">
+
+        <p>CutFlow © 2026</p>
+
+    </div>
+
+
+</body>
+
+</html>

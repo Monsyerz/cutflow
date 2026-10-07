@@ -1,0 +1,166 @@
+
+* 
+    {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    }
+
+body 
+    {
+    font-family: Arial, Helvetica, sans-serif;
+    background-color: #0d0d0d;
+    color: #ffffff;
+    }
+
+.nav-bar 
+    {
+    width: 100%;
+    padding: 20px 60px;
+    border-bottom: 1px solid #333333;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    }
+
+.nav-bar h1 
+    {
+        font-size: 24px;
+        color: #72d68a;
+    }
+
+.nav-links 
+    {
+    display: flex;
+    gap: 30px;
+    }
+
+.nav-links a 
+    {
+    color: #ffffff;
+    text-decoration: none;
+    }
+
+.nav-links a:hover 
+    {
+    color: #72d68a;
+    }
+
+.container
+    {
+    min-height: 70vh;
+    padding: 100px 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 60px;
+        }
+
+.containerA 
+    {
+    width: 50%;
+    }
+
+.containerA h2 
+    {
+    font-size: 52px;
+    margin-bottom: 20px;
+    }
+
+.containerA span 
+    {
+    color: #72d68a;
+    }
+
+.containerA p 
+    {
+    color: #aaaaaa;
+    font-size: 18px;
+    line-height: 1.6;
+    max-width: 550px;
+    }
+
+.containerB 
+    {
+    width: 420px;
+    padding: 35px;
+    background-color: #151515;
+    border: 1px solid #333333;
+    }
+
+.containerB h3 
+    {
+    margin-bottom: 20px;
+    font-size: 22px;
+    }
+
+.input-box 
+    {
+    margin-bottom: 20px;
+    }
+
+.input-box label 
+    {
+    display: block;
+    margin-bottom: 8px;
+    color: #cccccc;
+    }
+
+.input-box input 
+    {
+    width: 100%;
+    padding: 12px;
+    background-color: #0d0d0d;
+    border: 1px solid #444444;
+    color: white;
+    font-size: 16px;
+    }
+
+.button 
+    {
+    width: 100%;
+    padding: 14px;
+    background-color: #72d68a;
+    border: none;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    }
+
+.button:hover
+    {
+    background-color: #8de89f;
+    }
+
+.footer 
+    {
+    padding: 25px 60px;
+    border-top: 1px solid #333333;
+    color: #777777;
+    text-align: center;
+    }
+
+@media (max-width: 800px)
+{
+    .container 
+    {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 60px 30px;
+    }
+
+    .containerA 
+    {
+        width: 100%;
+    }
+
+    .containerB 
+    {
+        width: 100%;
+    }
+
+    .nav-bar 
+    {
+        padding: 20px 30px;
+    }
+}
