@@ -76,12 +76,12 @@
                 <h3>Results</h3>
 
                 <p>Stocks: {{ stocks }}</p>
-                <p>Waste: {{ waste }}</p>
-                <p>Utilization: {{ utilization }}%</p>
+                <p>Waste: {{ "%.2f"|format(waste) }}</p>
+                <p>Utilization: {{ "%.2f"|format(utilization) }}%</p>
             </div>
 
             {% endif %}
-            
+
         </div>
 
     </div>
