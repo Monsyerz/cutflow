@@ -15,12 +15,13 @@ def home():
 
     if request.method == "POST":
         stock_length = float(request.form.get("stock_length"))
-        cut_length = float(request.form.get("cut_length"))
-        quantity = int(request.form.get("quantity"))
-
-        cut = Cut(cut_length, quantity)
-
-        cuts = [cut]
+        cut_lengths = request.form.getlist("cut_length")
+        quantities = request.form.getlist("quantity")
+        
+        
+        cuts=[]
+        for cut_length, quantity in zip(cut_lengths, quantities):
+            cuts.append(Cut(float(cut_length), int(quantity)))
 
         expanded = expand_cuts(cuts)
         sorted_cuts = merge_sort(expanded)
