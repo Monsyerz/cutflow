@@ -13,7 +13,6 @@
 
 <body>
 
-
     <div class="nav-bar">
 
         <h1>CutFlow</h1>
@@ -48,46 +47,77 @@
 
             <h3>Cut Optimizer</h3>
 
+            {% if error %}
+                <p class="error-message">{{ error }}</p>
+            {% endif %}
+
             <form method="POST">
 
                 <div class="input-box">
                     <label>Stock Length</label>
-                    <input type="number" name="stock_length" step="0.01" min="0.01" placeholder="Example: 20" required>
+                    <input
+                        type="number"
+                        name="stock_length"
+                        step="0.01"
+                        min="0.01"
+                        placeholder="Example: 20"
+                        required>
                 </div>
 
-                <div class="input-box">
-                    <label>Cut Length</label>
-                    <input type="number" name="cut_length" step="0.01" min="0.01" placeholder="Example: 10.5" required>
+
+                <div id="cuts-container">
+
+                    <div class="cut-row">
+
+                        <div class="input-box">
+                            <label>Cut Length</label>
+                            <input
+                                type="number"
+                                name="cut_length"
+                                step="0.01"
+                                min="0.01"
+                                placeholder="Example: 10.5"
+                                required>
+                        </div>
+
+                        <div class="input-box">
+                            <label>Quantity</label>
+                            <input
+                                type="number"
+                                name="quantity"
+                                step="1"
+                                min="1"
+                                placeholder="Example: 3"
+                                required>
+                        </div>
+
+                    </div>
+
                 </div>
 
-                <div class="input-box">
-                    <label>Quantity</label>
-                    <input type="number" name="quantity" step="1" min="1" placeholder="Example: 3" required>
-                </div>
-                <div class="input-box">
-                    <label>Cut Length</label>
-                    <input type="number" name="cut_length" step="0.01" min="0.01" required>
-                </div>
 
-                <div class="input-box">
-                    <label>Quantity</label>
-                    <input type="number" name="quantity" step="1" min="1" required>
-                </div>
-                
+                <button type="button" id="add-cut">
+                    + Add Cut
+                </button>
+
                 <button class="button" type="submit">
                     Optimize
                 </button>
 
             </form>
-                {% if utilization is defined %}
 
-            <div class="results">
-                <h3>Results</h3>
 
-                <p>Stocks: {{ stocks }}</p>
-                <p>Waste: {{ "%.2f"|format(waste) }}</p>
-                <p>Utilization: {{ "%.2f"|format(utilization) }}%</p>
-            </div>
+            {% if utilization is defined %}
+
+                <div class="results">
+
+                    <h3>Results</h3>
+
+                    <p>Stocks: {{ stocks }}</p>
+                    <p>Waste: {{ "%.2f"|format(waste) }}</p>
+                    <p>Utilization: {{ "%.2f"|format(utilization) }}%</p>
+
+                </div>
 
             {% endif %}
 
@@ -97,11 +127,11 @@
 
 
     <div class="footer">
-
         <p>CutFlow © 2026</p>
-
     </div>
 
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
 
 </body>
 
