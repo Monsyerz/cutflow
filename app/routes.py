@@ -73,17 +73,21 @@ def home():
         sorted_cuts = merge_sort(expanded)
         stocks = optimize_cuts(sorted_cuts, stock_length)
 
-        stocks_used=len(stocks)
+        stocks_used = len(stocks)
         
         waste = calculate_waste(stocks, stock_length)
         utilization = calculate_utilization(stocks, stock_length)
+
+        total_cut_length = sum(expanded)
 
         return render_template  (
             "index.html",
             stocks=stocks,
             waste=waste,
             utilization=utilization,
-            stocks_used=stocks_used
+            stocks_used=stocks_used,
+            total_cut_length=total_cut_length
+
             )
 
     return render_template("index.html")
