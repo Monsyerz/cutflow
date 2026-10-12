@@ -79,6 +79,8 @@ def home():
         utilization = calculate_utilization(stocks, stock_length)
 
         total_cut_length = sum(expanded)
+        total_cuts = len(expanded)
+
 
         return render_template  (
             "index.html",
@@ -86,8 +88,8 @@ def home():
             waste=waste,
             utilization=utilization,
             stocks_used=stocks_used,
-            total_cut_length=total_cut_length
-
+            total_cut_length=total_cut_length,
+            total_cuts=total_cuts
             )
 
     return render_template("index.html")
