@@ -118,16 +118,26 @@
                     <p>Total Cut Length: {{ "%.2f"|format(total_cut_length) }}</p>
                     <p>Waste: {{ "%.2f"|format(waste) }}</p>
                     <p>Utilization: {{ "%.2f"|format(utilization) }}%</p>
-                    <p>Stocks: {{ stocks }}</p>
                     
+   
+                    <div class="stock-list">
+
+                        <h4>Cutting Layout</h4>
+
+                        {% for stock in stocks %}
+
+                            <div class="stock-item">
+                                <strong>Stock {{ loop.index }}</strong>
+                                <span>{{ stock | join(" + ") }}</span>
+                            </div>
                     
+                        {% endfor %}
+                    
+                    </div>
 
                 </div>
-
             {% endif %}
-
-        </div>
-
+            </div>
     </div>
 
 
