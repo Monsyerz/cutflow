@@ -2,7 +2,8 @@ from flask import Flask
 import os
 from dotenv import load_dotenv
 from sqlalchemy.engine import URL
-from app.extensions import db
+from app.extensions import db,migrate
+
 
 load_dotenv()
 
@@ -21,6 +22,9 @@ def create_app():
     )
 
     db.init_app(app)
+    migrate.init_app(app, db)
+
+    from app import db_models
 
     from app.routes import main
     app.register_blueprint(main)
