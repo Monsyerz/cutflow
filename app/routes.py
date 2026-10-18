@@ -7,6 +7,8 @@ from app.optimizer import (
     calculate_waste,
     calculate_utilization
 )
+from app.extensions import db
+from app.db_models import OptimizationResult
 
 main = Blueprint("main", __name__)
 
@@ -80,6 +82,13 @@ def home():
 
         total_cut_length = sum(expanded)
         total_cuts = len(expanded)
+        result = OptimizationResult(
+            stocks_used=stocks_used,
+            waste=waste,
+            utilization=utilization
+        )
+        db.session.add(result)
+        db.session.commit()
 
 
         return render_template  (
