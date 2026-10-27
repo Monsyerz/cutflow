@@ -1,7 +1,12 @@
 import unittest
-from app.optimizer import calculate_utilization, calculate_waste
+
 from app.models import Cut
-from app.optimizer import expand_cuts
+from app.optimizer import (
+    calculate_utilization,
+    calculate_waste,
+    expand_cuts,
+    merge_sort
+)
 
 class TestOptimizer(unittest.TestCase):
     def test_calculate_waste(self):
@@ -38,3 +43,7 @@ class TestOptimizer(unittest.TestCase):
         expanded_cuts = expand_cuts(cuts)
         self.assertEqual(len(expanded_cuts), 6)
         self.assertEqual(expanded_cuts,[5.0, 5.0, 7.0, 10.0, 10.0, 10.0])
+    def test_merge_sort(self):
+        cuts = [5.0, 15.0, 7.0, 10.5, 3.0, 20.0]
+        sorted_cuts = merge_sort(cuts)
+        self.assertEqual(sorted_cuts, [20.0, 15.0, 10.5, 7.0, 5.0, 3.0])
