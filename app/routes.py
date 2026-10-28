@@ -54,12 +54,19 @@ def home():
 
         cuts = []
 
-        for cut_length, quantity in zip(cut_lengths, quantities):
-            
-            cut_length = float(cut_length)
-            quantity = int(quantity)
+        for cut_length_raw, quantity_raw in zip(cut_lengths, quantities):
 
-            if cut_length<=0:
+            try:
+                cut_length = float(cut_length_raw)
+                quantity = int(quantity_raw)
+
+            except (ValueError, TypeError):
+                return render_template(
+                    "index.html",
+                    error="Cut length must be a valid number and quantity must be a whole number."
+                )
+
+            if not math.isfinite(cut_length) or cut_length <= 0:
                 return render_template(
                     "index.html",
                     error="Cut lengths must be positive numbers."
