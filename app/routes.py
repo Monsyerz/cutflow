@@ -7,6 +7,8 @@ from app.optimizer import (
     calculate_waste,
     calculate_utilization
 )
+import math
+
 from app.extensions import db
 from app.db_models import OptimizationResult
 
@@ -34,9 +36,14 @@ def home():
                 error="Please enter a valid stock length."
             )
         
-        stock_length = float(stock_length_raw)
+        try:
+            stock_length = float(stock_length_raw)
+        except (ValueError, TypeError):
+            return render_template(
+                "index.html",
+                error="Stock length must be a valid number.")
         
-        if stock_length <= 0:
+        if not math.isfinite(stock_length) or stock_length <= 0:
             return render_template(
                 "index.html",
                 error="Stock length must be a positive number."
