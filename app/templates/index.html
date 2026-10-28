@@ -18,9 +18,10 @@
         <h1>CutFlow</h1>
 
         <div class="nav-links">
-            <a href="#">Home</a>
-            <a href="#">Optimizer</a>
+            <a href="{{ url_for('main.home') }}">Home</a>
+            <a href="{{ url_for('main.optimizer') }}#optimizer">Optimizer</a>
             <a href="#">About</a>
+            <a href="{{ url_for('main.history') }}">History</a>
         </div>
 
     </div>
@@ -43,7 +44,7 @@
         </div>
 
 
-        <div class="containerB">
+        <div class="containerB" id="optimizer">
 
             <h3>Cut Optimizer</h3>
 
