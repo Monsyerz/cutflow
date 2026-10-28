@@ -1,31 +1,39 @@
+
 # CutFlow
+
+**Smarter cuts. Less waste.**
 
 CutFlow is a web-based material cutting optimizer built with Python, Flask, PostgreSQL, and JavaScript.
 
 The goal of the project is to reduce material waste by organizing required cuts across available stock lengths using a **First Fit Decreasing (FFD)** optimization strategy.
 
-The project demonstrates practical knowledge of data structures and algorithms, backend development, relational databases, object-relational mapping (ORM), database migrations, and frontend integration.
+The project demonstrates practical knowledge of data structures and algorithms, backend development, relational databases, object-relational mapping (ORM), database migrations, automated testing, and frontend integration.
+
+> **Project Status:** Active Development  
+> CutFlow is currently a functional local web application. Additional features and public deployment are planned.
 
 ## Features
 
 - Enter stock length, cut length, and quantity
 - Add and remove multiple cut rows dynamically using JavaScript
-- Support multiple cut lengths in a single optimization
-- Validate stock length, cut lengths, and quantities on the backend
+- Support multiple different cut lengths in a single optimization
+- Perform basic client-side and backend input validation
 - Automatically expand requested cuts based on quantity
 - Sort cuts using a custom Merge Sort implementation
 - Optimize stock usage using First Fit Decreasing
 - Calculate total material waste and utilization percentage
 - Calculate total cut length and number of cuts
 - Display stock pieces used and a detailed cutting layout
-- Provide basic client-side input validation
 - Automatically save optimization results to PostgreSQL
 - Use SQLAlchemy ORM for database operations
 - Manage database schema changes with Flask-Migrate and Alembic
+- Display the 10 most recent optimizations on a History page
+- Navigate between Home, Optimizer, About, and History
+- Run automated unit tests using Python's built-in unittest framework
 
 ## How It Works
 
-CutFlow processes user input through the following pipeline:
+CutFlow processes the user's input through the following pipeline:
 
 1. The user enters the available stock length.
 2. The user enters the required cut lengths and quantities.
@@ -42,6 +50,7 @@ CutFlow processes user input through the following pipeline:
    - Material utilization percentage
 9. SQLAlchemy creates an optimization result record and saves it to PostgreSQL.
 10. Flask renders the optimization summary and cutting layout using Jinja2 templates.
+11. The History page allows users to view the 10 most recent saved optimization summaries.
 
 ## Example
 
@@ -91,6 +100,9 @@ Stock 5: 10.5
 - JavaScript
 - Jinja2
 
+**Testing**
+- Python unittest
+
 **Development Tools**
 - Git
 - GitHub
@@ -108,7 +120,8 @@ cutflow/
 │   │   └── script.js
 │   │
 │   ├── templates/
-│   │   └── index.html
+│   │   ├── index.html
+│   │   └── history.html
 │   │
 │   ├── __init__.py
 │   ├── db_models.py
@@ -117,10 +130,11 @@ cutflow/
 │   ├── optimizer.py
 │   └── routes.py
 │
+├── tests/
+│   └── test_optimizer.py
+│
 ├── migrations/
-│   ├── versions/
-│   ├── alembic.ini
-│   └── env.py
+│   └── versions/
 │
 ├── .gitignore
 ├── README.md
@@ -142,7 +156,12 @@ If no existing stock piece can accommodate the cut, a new stock piece is created
 
 First Fit Decreasing does not guarantee a mathematically optimal solution for every input, but it provides an efficient method for generating practical cutting layouts.
 
-The current implementation assumes a single stock length and does not account for cutting blade thickness (kerf) or limited stock inventory.
+### Current Limitations
+
+- The optimizer assumes a single stock length.
+- The available stock inventory is treated as unlimited.
+- Cutting blade thickness (kerf) is not currently considered.
+- Complete cutting layouts and original input data are not yet stored in the database.
 
 ## Database Integration
 
@@ -172,6 +191,24 @@ This allows optimization summaries to be saved automatically whenever a successf
 
 The current implementation stores summary metrics rather than complete cutting layouts or original input data.
 
+### Optimization History
+
+CutFlow includes an optimization history page accessible through `/history`.
+
+The page retrieves the 10 most recent optimization records from PostgreSQL.
+
+Results are ordered by their creation date, with the newest records displayed first.
+
+Each record displays:
+
+- Optimization ID
+- Number of stock pieces used
+- Total material waste
+- Material utilization percentage
+- Date of optimization
+
+The 10-record limit only controls how many results are displayed. Older optimization records remain stored in PostgreSQL.
+
 ### Database Migrations
 
 CutFlow uses Flask-Migrate and Alembic to manage database schema changes.
@@ -182,19 +219,55 @@ The initial migration creates the `optimization_results` table.
 
 ## Input Validation
 
-CutFlow performs backend validation before processing an optimization.
+CutFlow currently performs basic backend validation before processing an optimization.
 
 The application checks that:
 
 - Stock length is greater than zero
 - Cut lengths are greater than zero
 - Cut lengths do not exceed stock length
-- Quantities are positive integers
+- Quantities are positive integers after conversion
 - Every submitted cut length has a corresponding quantity
 
 HTML input restrictions also provide basic client-side validation.
 
-Additional handling for malformed numeric input and database failures is planned.
+Additional error handling for malformed numeric inputs, empty submissions, and database failures is planned.
+
+## Automated Testing
+
+CutFlow uses Python's built-in `unittest` framework to verify the behavior of individual optimization functions.
+
+The current test suite includes four unit tests.
+
+### Implemented Tests
+
+**1. calculate_utilization()**
+- Verifies that material utilization is calculated correctly.
+- Compares the returned percentage against an expected value.
+
+**2. calculate_waste()**
+- Verifies that total material waste is calculated correctly.
+- Checks the remaining unused material across stock pieces.
+
+**3. expand_cuts()**
+- Verifies that cut quantities are correctly expanded into individual lengths.
+- Checks the resulting list against the expected values.
+
+**4. merge_sort()**
+- Verifies that the custom Merge Sort algorithm sorts cuts in descending order.
+- Confirms that the output matches the expected sequence.
+
+### Running Tests
+
+From the project root, run:
+
+```bash
+python -m unittest discover -s tests -v
+```
+
+The existing four unit tests have been executed successfully.
+
+Additional test coverage, including edge cases, invalid inputs, and database error handling, is planned.
 
 ## Running the Project
 
@@ -279,9 +352,21 @@ Open the application in your browser:
 http://127.0.0.1:5000/
 ```
 
+Optimization History:
+
+```text
+http://127.0.0.1:5000/history
+```
+
 The application currently runs using Flask's development server and a local PostgreSQL database.
 
-## Roadmap
+## Development Roadmap
+
+CutFlow is being developed incrementally, with a focus on reliability, maintainability, and practical functionality.
+
+The next development phases are organized in the following order:
+
+**Validation & Error Handling → CSV Export → Visualization → REST API → Deployment**
 
 ### Completed
 
@@ -289,40 +374,111 @@ The application currently runs using Flask's development server and a local Post
 - [x] First Fit Decreasing optimization algorithm
 - [x] Flask web application
 - [x] Dynamic JavaScript input rows
-- [x] Cutting layout visualization
+- [x] Text-based cutting layout
 - [x] Material waste and utilization calculations
-- [x] Backend input validation
+- [x] Basic backend input validation
 - [x] PostgreSQL database integration
 - [x] SQLAlchemy ORM models
 - [x] Alembic database migrations
 - [x] Automatic optimization result persistence
+- [x] Optimization History page
+- [x] Display the 10 most recent optimization results
+- [x] Four automated unit tests using unittest
+- [x] Basic navigation and About section
 
-### Planned
+### Phase 1 — Improved Validation & Error Handling (Next)
 
-- [ ] Improved backend validation and error handling
-- [ ] Database transaction rollback handling
-- [ ] Automated unit tests using pytest
-- [ ] Additional algorithm edge-case testing
-- [ ] Optimization history page
-- [ ] Save complete cutting layouts and original input data
-- [ ] Visual stock utilization diagrams
-- [ ] Preserve input values after optimization
-- [ ] Material and project management features
-- [ ] Improved responsive UI
-- [ ] Production deployment configuration
+**Goal:** Improve application reliability and prevent unexpected server errors.
+
+- [ ] Implement try/except handling for invalid numeric input
+- [ ] Handle empty or missing form values
+- [ ] Reject non-finite numeric values
+- [ ] Improve error messages displayed to users
+- [ ] Implement database transaction rollback handling
+- [ ] Handle database connection and commit failures
+- [ ] Add tests for invalid input and edge cases
+- [ ] Preserve submitted values when validation fails
+
+### Phase 2 — CSV Export
+
+**Goal:** Allow users to download optimization results for external use.
+
+- [ ] Implement CSV file generation
+- [ ] Add a Download CSV button
+- [ ] Export optimization summary data
+- [ ] Include meaningful column headers
+- [ ] Format numerical values consistently
+- [ ] Validate exported results through automated tests
+
+### Phase 3 — Visual Cutting Layout
+
+**Goal:** Improve how optimization results are presented.
+
+- [ ] Create graphical representations of stock pieces
+- [ ] Display individual cuts as proportional segments
+- [ ] Visually distinguish used material from remaining waste
+- [ ] Display material utilization percentages
+- [ ] Improve responsive layout for smaller screens
+- [ ] Improve accessibility and visual clarity
+
+### Phase 4 — REST API
+
+**Goal:** Allow external applications to access the CutFlow optimization engine.
+
+- [ ] Create a REST API endpoint such as `POST /api/optimize`
+- [ ] Accept optimization inputs in JSON format
+- [ ] Return optimization results as JSON
+- [ ] Provide meaningful API validation errors
+- [ ] Reuse the existing optimization algorithms
+- [ ] Implement API endpoint tests
+- [ ] Document API requests and responses
+
+The REST API will allow other applications and scripts to interact with the CutFlow optimization engine without using the HTML interface.
+
+### Phase 5 — Deployment
+
+**Goal:** Make CutFlow publicly accessible.
+
+- [ ] Prepare production configuration
+- [ ] Configure secure environment variables
+- [ ] Set up a production WSGI server
+- [ ] Configure a hosted PostgreSQL database
+- [ ] Apply database migrations in production
+- [ ] Deploy the application to a hosting platform
+- [ ] Test the deployed application
+- [ ] Add the live application URL to the README
+- [ ] Connect the deployed application to the personal portfolio
+
+### Potential Future Enhancements
+
+- [ ] Store complete cutting layouts and original input data
+- [ ] Support multiple stock lengths
+- [ ] Support limited material inventory
+- [ ] Include cutting blade thickness (kerf)
+- [ ] Add material and project management functionality
+- [ ] Expand automated test coverage
 
 ## Project Status
 
 CutFlow is currently under active development.
 
-The application includes a functional optimization engine, Flask web interface, dynamic JavaScript inputs, cutting layout visualization, and PostgreSQL database integration.
+The application includes a functional optimization engine, Flask web interface, dynamic JavaScript inputs, cutting layout display, and PostgreSQL integration.
 
-Optimization results are automatically persisted using SQLAlchemy ORM, and database schema changes are managed with Alembic migrations.
+Optimization summaries are automatically saved using SQLAlchemy ORM, and database schema changes are managed through Alembic migrations.
 
-The next development phase will focus on improving reliability, implementing automated tests, and developing an optimization history feature.
+The application also includes an Optimization History page and four automated unit tests.
+
+The next development phase will focus on improving input validation, error handling, and application reliability before implementing additional user-facing functionality.
+
+CutFlow is currently a portfolio project and is not intended for production manufacturing use.
+
+Feedback and suggestions are welcome through the project's GitHub repository.
 
 ## Author
 
 **Kacper Popek**
 
 Software Engineering student focused on Python, backend development, data structures, algorithms, relational databases, and practical software engineering solutions.
+
+**GitHub:** https://github.com/Monsyerz
+
