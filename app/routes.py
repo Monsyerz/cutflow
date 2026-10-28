@@ -102,3 +102,11 @@ def home():
             )
 
     return render_template("index.html")
+
+@main.route("/history")
+def history():
+    results = OptimizationResult.query.order_by(
+        OptimizationResult.created_at.desc()
+    ).limit(10).all()
+
+    return render_template("history.html", results=results)
