@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CutFlow - History</title>
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='styles.css') }}">
+</head>
+
+<body>
+
+    <div class="nav-bar">
+        <h1>CutFlow</h1>
+
+        <div class="nav-links">
+            <a href="{{ url_for('main.home') }}">Home</a>
+            <a href="{{ url_for('main.history') }}">History</a>
+        </div>
+    </div>
+
+    <div class="container">
+
+        <div class="containerA">
+            <h2>Optimization <span>History.</span></h2>
+            <p>Your latest optimization results.</p>
+        </div>
+
+        <div class="containerB">
+            <h3>Recent Optimizations</h3>
+
+            {% for result in results %}
+
+                <div class="results">
+                    <p>Run #{{ result.id }}</p>
+                    <p>Stocks Used: {{ result.stocks_used }}</p>
+                    <p>Waste: {{ "%.2f"|format(result.waste) }}</p>
+                    <p>Utilization: {{ "%.2f"|format(result.utilization) }}%</p>
+                    <p>Date: {{ result.created_at }}</p>
+                </div>
+
+            {% else %}
+
+                <p>No optimization history yet.</p>
+
+            {% endfor %}
+
+        </div>
+
+    </div>
+
+</body>
+</html>
