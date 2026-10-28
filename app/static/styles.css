@@ -212,3 +212,20 @@ body
     padding: 10px 0;
     border-bottom: 1px solid #333;
 }
+
+.about-section {
+    padding: 80px 60px;
+    border-top: 1px solid #333333;
+}
+
+.about-section h2 {
+    color: #72d68a;
+    margin-bottom: 20px;
+}
+
+.about-section p {
+    color: #aaaaaa;
+    line-height: 1.6;
+    max-width: 600px;
+    margin-bottom: 12px;
+}
