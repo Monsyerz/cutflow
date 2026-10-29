@@ -28,6 +28,11 @@ def home():
                 "index.html",
                 error="Each cut length must have a quantity."
             )
+        if not cut_lengths:
+            return render_template(
+                "index.html",
+                error="Please enter at least one cut."
+            )
 
         # Validate stock length input
 

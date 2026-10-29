@@ -37,3 +37,53 @@ class TestRoutes(unittest.TestCase):
                 b"Unable to save optimization results",
                 response.data
             )       
+    def test_empty_cuts(self):
+        response = self.client.post("/", data={
+            "stock_length": "20",
+        })
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(
+            b"Please enter at least one cut",
+            response.data
+        )
+    def test_invalid_cut_length(self):
+        response = self.client.post("/", data={
+            "stock_length": "20",
+            "cut_length": "invalid",
+            "quantity": "2"
+        })
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(
+            b"Cut length must be a valid number",
+            response.data
+        )
+
+        
+    def test_negative_cut_length(self):
+        response = self.client.post("/", data={
+            "stock_length": "20",
+            "cut_length": "-10",
+            "quantity": "2"
+        })
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(
+            b"Cut lengths must be positive numbers",
+            response.data
+        )
+
+
+    def test_cut_length_exceeds_stock_length(self):
+        response = self.client.post("/", data={
+            "stock_length": "20",
+            "cut_length": "25",
+            "quantity": "2"
+        })
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(
+            b"Cut lengths cannot exceed stock length",
+            response.data
+        )   
