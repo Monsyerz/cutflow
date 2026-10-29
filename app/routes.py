@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request
+from flask import Blueprint, render_template, request, Response
 from app.models import Cut
 from app.optimizer import (
     expand_cuts,
@@ -7,7 +7,11 @@ from app.optimizer import (
     calculate_waste,
     calculate_utilization
 )
+
 import math
+import csv
+
+from io import StringIO
 
 from app.extensions import db
 from app.db_models import OptimizationResult
@@ -134,6 +138,31 @@ def home():
 def history():
     results = OptimizationResult.query.order_by(
         OptimizationResult.created_at.desc()
-    ).limit(10).all()
+    ).all()
 
-    return render_template("history.html", results=results)
+    return "CSV export coming soon"
+
+@main.route("/export")
+def export_history():
+    results=OptimizationResult.query.order_by(
+        OptimizationResult.created_at.desc()
+    ).limit(10).all()
+    output = StringIO()
+    csv_writer = csv.writer(output)
+    csv_writer.writerow(["ID", "Stocks Used", "Waste", "Utilization", "Created At"])
+    for result in results:
+        csv_writer.writerow([
+            result.id,
+            result.stocks_used,
+            result.waste,
+            result.utilization,
+            result.created_at
+        ])
+    csv_data = output.getvalue()
+    return Response(
+        csv_data,
+        mimetype="text/csv",
+        headers={"Content-Disposition": "attachment;filename=history.csv"
+        }
+    )
+    
