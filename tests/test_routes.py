@@ -60,7 +60,7 @@ class TestRoutes(unittest.TestCase):
             response.data
         )
 
-        
+
     def test_negative_cut_length(self):
         response = self.client.post("/", data={
             "stock_length": "20",
@@ -71,6 +71,9 @@ class TestRoutes(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn(
             b"Cut lengths must be positive numbers",
+            response.data)
+        self.assertIn(
+            b'value="20"',
             response.data
         )
 
