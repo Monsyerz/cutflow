@@ -11,6 +11,7 @@ import math
 
 from app.extensions import db
 from app.db_models import OptimizationResult
+from sqlalchemy.exc import SQLAlchemyError
 
 main = Blueprint("main", __name__)
 
@@ -101,8 +102,15 @@ def home():
             waste=waste,
             utilization=utilization
         )
-        db.session.add(result)
-        db.session.commit()
+        try:
+            db.session.add(result)
+            db.session.commit()
+        except SQLAlchemyError as SQLAlchemyError:
+            db.session.rollback()
+            return render_template(
+                "index.html",
+                error="Unable to save optimization results. Please try again."
+            )
 
 
         return render_template  (
