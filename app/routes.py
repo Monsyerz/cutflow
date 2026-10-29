@@ -138,15 +138,14 @@ def home():
 def history():
     results = OptimizationResult.query.order_by(
         OptimizationResult.created_at.desc()
-    ).all()
-
-    return "CSV export coming soon"
+    ).limit(10).all()
+    return render_template("history.html", results=results)
 
 @main.route("/export")
 def export_history():
     results=OptimizationResult.query.order_by(
         OptimizationResult.created_at.desc()
-    ).limit(10).all()
+    ).all()
     output = StringIO()
     csv_writer = csv.writer(output)
     csv_writer.writerow(["ID", "Stocks Used", "Waste", "Utilization", "Created At"])
@@ -162,7 +161,7 @@ def export_history():
     return Response(
         csv_data,
         mimetype="text/csv",
-        headers={"Content-Disposition": "attachment;filename=history.csv"
+        headers={"Content-Disposition": "attachment; filename=history.csv"
         }
     )
     

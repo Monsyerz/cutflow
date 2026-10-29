@@ -229,3 +229,18 @@ body
     max-width: 600px;
     margin-bottom: 12px;
 }
+
+.download-csv {
+    display: inline-block;
+    padding: 12px 20px;
+    background-color: #72d68a;
+    color: #0d0d0d;
+    text-decoration: none;
+    font-weight: bold;
+    margin-bottom: 20px;
+    cursor: pointer;
+}
+
+.download-csv:hover {
+    background-color: #8de89f;
+}
