@@ -105,7 +105,7 @@ def home():
         try:
             db.session.add(result)
             db.session.commit()
-        except SQLAlchemyError as SQLAlchemyError:
+        except SQLAlchemyError:
             db.session.rollback()
             return render_template(
                 "index.html",
