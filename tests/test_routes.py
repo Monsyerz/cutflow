@@ -90,3 +90,17 @@ class TestRoutes(unittest.TestCase):
             b"Cut lengths cannot exceed stock length",
             response.data
         )   
+
+    def test_preserve_cut_values(self):
+        response = self.client.post("/", data={
+            "stock_length": "20",
+            "cut_length": ["10", "25"],
+            "quantity": ["2", "3"]
+        })
+
+        self.assertEqual(response.status_code, 200)
+
+        self.assertIn(b'value="10"', response.data)
+        self.assertIn(b'value="25"', response.data)
+        self.assertIn(b'value="2"', response.data)
+        self.assertIn(b'value="3"', response.data)

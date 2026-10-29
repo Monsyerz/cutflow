@@ -68,7 +68,11 @@
 
 
                 <div id="cuts-container">
+                        {% set cut_lengths = request.form.getlist('cut_length') %}
+                        {% set quantities = request.form.getlist('quantity') %}
+                        {% set row_count = [cut_lengths|length, quantities|length, 1]|max %}
 
+                        {% for i in range(row_count) %}
                     <div class="cut-row">
 
                         <div class="input-box">
@@ -79,6 +83,7 @@
                                 step="0.01"
                                 min="0.01"
                                 placeholder="Example: 10.5"
+                                value="{{ cut_lengths[i] if i < cut_lengths|length else '' }}"
                                 required>
                         </div>
 
@@ -90,18 +95,26 @@
                                 step="1"
                                 min="1"
                                 placeholder="Example: 3"
+                                value="{{ quantities[i] if i < quantities|length else '' }}"
                                 required>
                         </div>
-
+                        {% if i > 0 %}
+                            <button type="button" class="remove-cut">
+                                Remove
+                            </button>
+                        {% endif %}
                     </div>
 
-                </div>
+                    {% endfor %}
+ 
 
+                </div>
+                
 
                 <button type="button" id="add-cut">
                     + Add Cut
                 </button>
-
+ 
                 <button class="button" type="submit">
                     Optimize
                 </button>

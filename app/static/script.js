@@ -1,6 +1,11 @@
 const addButton = document.getElementById('add-cut');
 const cutsContainer = document.getElementById('cuts-container');
 
+document.querySelectorAll('#cuts-container .remove-cut').forEach(button => {
+    button.addEventListener('click', function () {
+        button.closest('.cut-row').remove();
+    });
+});
 addButton.addEventListener('click', function () {
 
     const cutDiv = document.createElement('div');
