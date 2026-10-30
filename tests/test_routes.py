@@ -1,6 +1,7 @@
 import unittest
 from unittest.mock import patch
 from sqlalchemy.exc import SQLAlchemyError
+from app.db_models import OptimizationResult
 
 from app import create_app
 from app.extensions import db
@@ -104,3 +105,20 @@ class TestRoutes(unittest.TestCase):
         self.assertIn(b'value="25"', response.data)
         self.assertIn(b'value="2"', response.data)
         self.assertIn(b'value="3"', response.data)
+
+    def test_csv_export(self):
+        with self.app.app_context():
+            db.create_all()
+
+            result = OptimizationResult(
+                stocks_used=2,
+                waste=5.0,
+                utilization=87.5
+            )
+            db.session.add(result)
+            db.session.commit()
+            response=self.client.get("/export")
+            self.assertEqual(response.status_code, 200)
+            self.assertIn(b"ID,Stocks Used,Waste,Utilization,Created At", response.data)
+            self.assertIn(b"2,5.0,87.5", response.data)
+            self.assertEqual(response.mimetype, "text/csv")
