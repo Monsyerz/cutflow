@@ -5,7 +5,8 @@ from app.optimizer import (
     calculate_utilization,
     calculate_waste,
     expand_cuts,
-    merge_sort
+    merge_sort,
+    optimize_cuts
 )
 
 class TestOptimizer(unittest.TestCase):
@@ -47,3 +48,8 @@ class TestOptimizer(unittest.TestCase):
         cuts = [5.0, 15.0, 7.0, 10.5, 3.0, 20.0]
         sorted_cuts = merge_sort(cuts)
         self.assertEqual(sorted_cuts, [20.0, 15.0, 10.5, 7.0, 5.0, 3.0])
+    def test_optimize_cuts(self):
+        cuts = [15,10,7,5]
+        stock_length = 20
+        result = optimize_cuts(cuts, stock_length)
+        self.assertEqual(result, [[15, 5], [10, 7]])
