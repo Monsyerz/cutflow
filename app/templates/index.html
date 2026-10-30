@@ -122,38 +122,51 @@
             </form>
 
 
-            {% if utilization is defined %}
+                    {% if utilization is defined %}
 
-                <div class="results">
+                        <div class="results">
+                            <h3>Results</h3>
 
-                    <h3>Results</h3>
-                    
-                    <p>Total Cuts: {{ total_cuts }}</p>
-                    <p>Stocks Used: {{ stocks_used }}</p>
-                    <p>Total Cut Length: {{ "%.2f"|format(total_cut_length) }}</p>
-                    <p>Waste: {{ "%.2f"|format(waste) }}</p>
-                    <p>Utilization: {{ "%.2f"|format(utilization) }}%</p>
-                    
-   
-                    <div class="stock-list">
+                            <div class="stock-list">
+                                <h4>Example - Last Stock</h4>
 
-                        <h4>Cutting Layout</h4>
+                                {% for stock in stocks[-1:] %}
 
-                        {% for stock in stocks %}
+                                    <div class="stock-item">
+                                        <strong>Stock {{ stocks | length }}</strong>
+                                        <span>
+                                            {{ stock | length }}
+                                            {{ 'cut' if stock | length == 1 else 'cuts' }}
+                                        </span>
+                                    </div>
 
-                            <div class="stock-item">
-                                <strong>Stock {{ loop.index }}</strong>
-                                <span>{{ stock | join(" + ") }}</span>
+                                    <div class="stock-bar">
+                                        {% for cut in stock %}
+                                            <div class="cut-segment"
+                                                style="width: {{ (cut / stock_length * 100) | round(2) }}%;">
+                                                {{ cut }}
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+
+                                {% endfor %}
                             </div>
-                    
-                        {% endfor %}
-                    
-                    </div>
 
-                </div>
-            {% endif %}
-            </div>
-    </div>
+                            <div class="optimization-summary">
+                                <h4>Optimization Summary</h4>
+
+                                <p>Total Stocks: {{ stocks_used }}</p>
+                                <p>Total Cuts: {{ total_cuts }}</p>
+                                <p>Total Cut Length: {{ "%.2f"|format(total_cut_length) }}</p>
+                                <p>Total Waste: {{ "%.2f"|format(waste) }}</p>
+                                <p>Overall Utilization: {{ "%.2f"|format(utilization) }}%</p>
+                            </div>
+
+                        </div>
+
+                    {% endif %}
+                    </div>
+                    </div>
     <section id="about" class="about-section">
         <h2>About CutFlow</h2>
         <p>

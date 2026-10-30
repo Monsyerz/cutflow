@@ -125,6 +125,7 @@ def home():
         return render_template  (
             "index.html",
             stocks=stocks,
+            stock_length=stock_length,
             waste=waste,
             utilization=utilization,
             stocks_used=stocks_used,
