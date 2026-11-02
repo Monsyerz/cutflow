@@ -53,3 +53,9 @@ class TestOptimizer(unittest.TestCase):
         stock_length = 20
         result = optimize_cuts(cuts, stock_length)
         self.assertEqual(result, [[15, 5], [10, 7]])
+
+    def test_optimize_cuts_with_large_stock_length(self):
+        cuts = [15, 10, 7, 5]
+        stock_length = 30
+        result = optimize_cuts(cuts, stock_length)
+        self.assertEqual(result, [[15, 10,5], [7]])
