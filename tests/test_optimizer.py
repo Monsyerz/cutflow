@@ -59,3 +59,72 @@ class TestOptimizer(unittest.TestCase):
         stock_length = 30
         result = optimize_cuts(cuts, stock_length)
         self.assertEqual(result, [[15, 10,5], [7]])
+
+    def test_empty_inputs(self):
+        self.assertEqual(expand_cuts([]), [])
+        self.assertEqual(merge_sort([]), [])
+        self.assertEqual(optimize_cuts([], 20), [])
+        self.assertEqual(calculate_waste([], 20), 0)
+        self.assertEqual(calculate_utilization([], 20), 0)
+
+    def test_merge_sort_edge_cases(self):
+        cases = [
+            ([10], [10]),
+            ([5, 10, 5, 10], [10, 10, 5, 5]),
+            ([3, 7, 15], [15, 7, 3]),
+            ([15, 7, 3], [15, 7, 3])
+        ]
+
+        for cuts, expected in cases:
+            with self.subTest(cuts=cuts):
+                self.assertEqual(merge_sort(cuts), expected)
+
+    def test_exact_stock_fill(self):
+        stocks = optimize_cuts([15, 10, 10, 5], 20)
+
+        self.assertEqual(stocks, [[15, 5], [10, 10]])
+        self.assertAlmostEqual(calculate_waste(stocks, 20), 0)
+        self.assertAlmostEqual(
+            calculate_utilization(stocks, 20), 100
+        )
+
+    def test_each_cut_requires_separate_stock(self):
+        stocks = optimize_cuts([15, 14, 13], 20)
+
+        self.assertEqual(stocks, [[15], [14], [13]])
+        self.assertAlmostEqual(calculate_waste(stocks, 20), 18)
+        self.assertAlmostEqual(
+            calculate_utilization(stocks, 20), 70
+        )
+
+    def test_decimal_cut_lengths(self):
+        stocks = optimize_cuts([7.5, 5.0, 2.5], 10)
+
+        self.assertEqual(stocks, [[7.5, 2.5], [5.0]])
+        self.assertAlmostEqual(calculate_waste(stocks, 10), 5)
+        self.assertAlmostEqual(
+            calculate_utilization(stocks, 10), 75
+        )
+
+    def test_optimizer_preserves_cuts_and_stock_capacity(self):
+        cuts = [9, 8, 7, 6, 5, 4, 3, 2, 1]
+        original_cuts = cuts.copy()
+
+        stocks = optimize_cuts(cuts, 15)
+        allocated_cuts = [
+            cut
+            for stock in stocks
+            for cut in stock
+        ]
+
+        self.assertCountEqual(allocated_cuts, original_cuts)
+        self.assertEqual(cuts, original_cuts)
+
+        for stock in stocks:
+            self.assertLessEqual(sum(stock), 15)
+
+        expected_waste = len(stocks) * 15 - sum(original_cuts)
+        self.assertAlmostEqual(
+            calculate_waste(stocks, 15),
+            expected_waste
+        )
