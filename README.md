@@ -1,84 +1,66 @@
+
 # CutFlow
 
 **Smarter cuts. Less waste.**
 
-CutFlow is a web-based material cutting optimizer built with Python, Flask, PostgreSQL, and JavaScript.
+CutFlow is a web-based, one-dimensional material cutting optimizer built with **Python, Flask, PostgreSQL, and JavaScript**. It uses the **First Fit Decreasing (FFD)** heuristic, supported by a custom Merge Sort implementation, to arrange required cuts into stock pieces and estimate material waste.
 
-The goal of the project is to reduce material waste by organizing required cuts across available stock lengths using a **First Fit Decreasing (FFD)** optimization strategy.
+The project combines my background in engineering with software engineering concepts: algorithms, input validation, relational databases, ORM, database migrations, automated testing, and error handling.
 
-The project demonstrates practical knowledge of data structures and algorithms, backend development, relational databases, object-relational mapping (ORM), database migrations, automated testing, error handling, and frontend integration.
-
-> **Project Status:** Active Development  
-> CutFlow is currently a functional local web application. Additional features and public deployment are planned.
+> **Status:** Active development. The application currently runs locally; public deployment is planned.
+>
+> **Latest local test result:** 33 tests passed using Python `unittest`.
 
 ## Features
 
-- Enter stock length, cut length, and quantity
-- Add and remove multiple cut rows dynamically using JavaScript
-- Support multiple different cut lengths in a single optimization
-- Perform client-side and backend input validation
-- Handle invalid, missing, negative, and non-finite numeric inputs
-- Preserve submitted form values after validation errors
-- Automatically expand requested cuts based on quantity
-- Sort cuts using a custom Merge Sort implementation
-- Optimize stock usage using First Fit Decreasing
-- Calculate total material waste and utilization percentage
-- Calculate total cut length and number of cuts
-- Display stock pieces used and a detailed cutting layout
-- Automatically save optimization results to PostgreSQL
-- Use SQLAlchemy ORM for database operations
-- Manage database schema changes with Flask-Migrate and Alembic
-- Handle database transaction failures using rollback
-- Display the 10 most recent optimizations on a History page
-- Navigate between Home, Optimizer, About, and History
-- Configure application secrets using environment variables
-- Support isolated testing through Flask application configuration
-- Run automated tests using Python's built-in unittest framework
+### Cutting Optimization
 
-## How It Works
+- Enter a stock length and multiple cut lengths with quantities.
+- Add or remove cut rows dynamically using JavaScript.
+- Expand requested quantities into individual cuts.
+- Sort cuts in descending order using a custom Merge Sort implementation.
+- Allocate cuts using the First Fit Decreasing (FFD) heuristic.
+- Calculate the total number of cuts, total cut length, stock pieces used, material waste, and utilization percentage.
+- Display an optimization summary and a proportional visual example of the last stock piece.
+- Use Python `Decimal` arithmetic for stock-capacity comparisons, waste, and utilization calculations to avoid common floating-point precision errors.
 
-CutFlow processes the user's input through the following pipeline:
+### Validation and Reliability
 
-1. The user enters the available stock length.
-2. The user enters the required cut lengths and quantities.
-3. JavaScript allows cut rows to be dynamically added or removed.
-4. Flask receives and validates the submitted form data.
-5. Invalid inputs generate descriptive error messages while preserving submitted values.
-6. Requested quantities are expanded into individual cuts.
-7. A custom Merge Sort implementation sorts the cuts in descending order.
-8. First Fit Decreasing places each cut into the first available stock piece where it fits.
-9. CutFlow calculates:
-   - Total cuts
-   - Total cut length
-   - Stock pieces used
-   - Remaining material waste
-   - Material utilization percentage
-10. SQLAlchemy creates an optimization result record and saves it to PostgreSQL.
-11. If a database transaction fails, SQLAlchemy rolls back the transaction and Flask displays an error message.
-12. Flask renders the optimization summary and cutting layout using Jinja2 templates.
-13. The History page displays the 10 most recent saved optimization summaries.
+- Validate stock lengths, cut lengths, and quantities on the backend, alongside HTML form validation.
+- Reject missing, invalid, non-positive, and non-finite length values.
+- Reject non-integer or non-positive quantities and mismatched cut/quantity lists.
+- Prevent individual cuts from exceeding the stock length.
+- Preserve submitted form values after validation errors.
+- Roll back failed database writes and display user-friendly error messages.
+- Handle database query failures when displaying history or exporting CSV.
+
+### Persistence and History
+
+- Save optimization summaries in PostgreSQL using Flask-SQLAlchemy.
+- Manage schema changes with Flask-Migrate and Alembic.
+- Display the **10 most recent** optimization summaries on the History page, ordered by creation date.
+- Export **all saved optimization summaries** to a downloadable CSV file, ordered newest first.
+- Export a CSV header row even when the database has no optimization records.
 
 ## Example
 
 ```text
 Stock Length: 20
 
-Cuts:
-15 × 2
+Required Cuts:
+15   × 2
 10.5 × 3
-7 × 1
-5 × 2
+7    × 1
+5    × 2
 
-Result:
-
-Total Cuts: 8
-Stocks Used: 5
-Total Cut Length: 78.50
-Waste: 21.50
-Utilization: 78.50%
+Optimization Summary:
+Total Stocks:        5
+Total Cuts:          8
+Total Cut Length:    78.50
+Total Waste:         21.50
+Overall Utilization: 78.50%
 
 Cutting Layout:
-
 Stock 1: 15 + 5
 Stock 2: 15 + 5
 Stock 3: 10.5 + 7
@@ -86,319 +68,201 @@ Stock 4: 10.5
 Stock 5: 10.5
 ```
 
+The layout above illustrates the optimization result. The current web interface displays an example visualization of the **last stock piece**, not a complete visualization of every stock piece.
+
+## How It Works
+
+1. The user submits a stock length and one or more cut length/quantity pairs.
+2. Flask validates the submitted values and preserves form inputs if validation fails.
+3. `expand_cuts()` converts quantities into a list of individual cuts.
+4. `merge_sort()` sorts the cuts in descending order.
+5. `optimize_cuts()` applies **First Fit Decreasing**: each cut is placed in the first existing stock piece with enough capacity; otherwise, a new stock piece is created.
+6. `calculate_waste()` and `calculate_utilization()` compute material metrics.
+7. SQLAlchemy saves the optimization summary to PostgreSQL. A failed write triggers a session rollback.
+8. Jinja2 renders the results; the History page and CSV endpoint expose saved summaries.
+
+### Why Decimal?
+
+Ordinary binary floating-point arithmetic can produce results such as:
+
+```python
+0.2 + 0.1 == 0.3  # False
+```
+
+That could incorrectly cause an exact-fit combination to occupy two stock pieces or produce a tiny negative waste value.
+
+CutFlow converts numeric inputs to `Decimal` using their string representation during capacity checks and metric calculations, then returns the expected result types to the rest of the application.
+
+A regression test covers this case:
+
+```python
+stocks = optimize_cuts([0.2, 0.1], 0.3)
+
+assert stocks == [[0.2, 0.1]]
+assert calculate_waste(stocks, 0.3) == 0
+assert calculate_utilization(stocks, 0.3) == 100
+```
+
+**Note:** FFD is a heuristic, not an exact optimization algorithm. It does not guarantee a globally optimal cutting layout for every input.
+
 ## Tech Stack
 
-**Backend**
-- Python
-- Flask
-- SQLAlchemy
-- Flask-SQLAlchemy
-
-**Database**
-- PostgreSQL
-- psycopg
-- Flask-Migrate
-- Alembic
-
-**Frontend**
-- HTML
-- CSS
-- JavaScript
-- Jinja2
-
-**Testing**
-- Python unittest
-- unittest.mock
-- Flask test client
-- SQLite in-memory test configuration
-
-**Development Tools**
-- Git
-- GitHub
-- VS Code
-- python-dotenv
+| Area | Technologies |
+| --- | --- |
+| Backend | Python, Flask |
+| Database | PostgreSQL, psycopg, SQLAlchemy, Flask-SQLAlchemy |
+| Migrations | Flask-Migrate, Alembic |
+| Frontend | HTML, CSS, JavaScript, Jinja2 |
+| Testing | unittest, unittest.mock, Flask test client, SQLite (in-memory) |
+| Development | Git, GitHub, VS Code, python-dotenv |
 
 ## Project Structure
 
 ```text
 cutflow/
-│
 ├── app/
 │   ├── static/
 │   │   ├── styles.css
 │   │   └── script.js
-│   │
 │   ├── templates/
 │   │   ├── index.html
 │   │   └── history.html
-│   │
 │   ├── __init__.py
 │   ├── db_models.py
 │   ├── extensions.py
 │   ├── models.py
 │   ├── optimizer.py
 │   └── routes.py
-│
+├── migrations/
+│   └── versions/
 ├── tests/
 │   ├── test_optimizer.py
 │   └── test_routes.py
-│
-├── migrations/
-│   └── versions/
-│
 ├── .gitignore
 ├── README.md
 ├── requirements.txt
 └── run.py
 ```
 
-## Optimization Logic
+## Database and Endpoints
 
-CutFlow uses the **First Fit Decreasing (FFD)** heuristic to solve a one-dimensional cutting stock problem.
+### OptimizationResult Model
 
-Before optimization, requested cuts are expanded based on their quantities and sorted from largest to smallest using a custom Merge Sort implementation.
+| Field | Type | Purpose |
+| --- | --- | --- |
+| `id` | Integer | Primary key |
+| `stocks_used` | Integer | Number of stock pieces used |
+| `waste` | Float | Remaining material waste |
+| `utilization` | Float | Utilization percentage |
+| `created_at` | DateTime | Timestamp for ordering history |
 
-The optimizer processes each cut and checks existing stock pieces in order.
+Currently, the database stores **optimization summaries only**, not full cutting layouts or original input values.
 
-If sufficient space remains in an existing stock piece, the cut is assigned to that piece.
+`Decimal` is used during calculations, while the persisted waste and utilization fields remain SQLAlchemy `Float` columns.
 
-If no existing stock piece can accommodate the cut, a new stock piece is created.
+### Routes
 
-First Fit Decreasing does not guarantee a mathematically optimal solution for every input, but it provides an efficient method for generating practical cutting layouts.
+| Route | Method | Behavior |
+| --- | --- | --- |
+| `/` | GET | Display the optimizer form |
+| `/` | POST | Validate inputs, optimize cuts, save results, and display a summary |
+| `/history` | GET | Display the latest 10 saved summaries |
+| `/export` | GET | Download all saved summaries as `history.csv` |
 
-### Current Limitations
+The CSV export includes:
 
-- The optimizer assumes a single stock length.
-- The available stock inventory is treated as unlimited.
-- Cutting blade thickness (kerf) is not currently considered.
-- Complete cutting layouts and original input data are not yet stored in the database.
+- ID
+- Stocks Used
+- Waste
+- Utilization
+- Created At
 
-## Database Integration
-
-CutFlow uses PostgreSQL to persist optimization summaries.
-
-Flask-SQLAlchemy provides an ORM layer that allows the application to interact with the database through Python objects rather than manually written SQL statements.
-
-### Database Model
-
-The `OptimizationResult` model represents the `optimization_results` table.
-
-| Column | Type | Description |
-|---|---|---|
-| id | Integer | Primary key |
-| stocks_used | Integer | Number of stock pieces used |
-| waste | Float | Remaining material waste |
-| utilization | Float | Material utilization percentage |
-| created_at | DateTime | Timestamp of the optimization |
-
-### Data Persistence
-
-After the optimization algorithm completes, Flask creates an `OptimizationResult` object containing the calculated metrics.
-
-SQLAlchemy adds the object to a database session and commits the transaction.
-
-This allows optimization summaries to be saved automatically whenever a successful optimization is submitted.
-
-The current implementation stores summary metrics rather than complete cutting layouts or original input data.
-
-### Database Transaction Error Handling
-
-CutFlow uses SQLAlchemy exception handling to manage database transaction failures.
-
-Database write operations are wrapped in a `try/except` block.
-
-If SQLAlchemy raises a database exception during the operation, the application calls:
-
-```python
-db.session.rollback()
-```
-
-This rolls back the current uncommitted transaction and allows the application to recover from a failed database write.
-
-The user receives a generic error message instead of internal database exception details.
-
-Database error handling currently covers optimization result writes. Additional error handling for history queries is planned.
-
-### Optimization History
-
-CutFlow includes an optimization history page accessible through `/history`.
-
-The page retrieves the 10 most recent optimization records from PostgreSQL.
-
-Results are ordered by their creation date, with the newest records displayed first.
-
-Each record displays:
-
-- Optimization ID
-- Number of stock pieces used
-- Total material waste
-- Material utilization percentage
-- Date of optimization
-
-The 10-record limit only controls how many results are displayed. Older optimization records remain stored in PostgreSQL.
-
-### Database Migrations
-
-CutFlow uses Flask-Migrate and Alembic to manage database schema changes.
-
-Migrations allow database tables and columns to be introduced or modified without manually recreating the database structure.
-
-The initial migration creates the `optimization_results` table.
-
-## Input Validation & Error Handling
-
-CutFlow performs frontend and backend validation before processing optimization requests.
-
-### Backend Validation
-
-The application checks that:
-
-- Stock length is a valid, positive, finite number
-- Cut lengths are valid, positive, finite numbers
-- Cut lengths do not exceed the available stock length
-- Quantities are positive integers
-- Every submitted cut length has a corresponding quantity
-- At least one cut is provided
-- Invalid numeric strings are rejected
-- Missing or empty required values are rejected
-
-Python's `try/except` blocks handle invalid numeric conversions.
-
-The `math.isfinite()` function prevents non-finite values such as `NaN` and infinity from being accepted as stock or cut lengths.
-
-### Frontend Validation
-
-HTML input restrictions provide additional client-side validation using attributes such as:
-
-- `type="number"`
-- `required`
-- `min`
-- `step`
-
-Backend validation remains responsible for verifying submitted data, even if frontend restrictions are bypassed.
-
-### Form Value Persistence
-
-CutFlow preserves previously submitted values when validation fails.
-
-Jinja2 retrieves the submitted stock length using `request.form.get()`.
-
-Dynamic cut lengths and quantities are retrieved using `request.form.getlist()`.
-
-A Jinja2 loop reconstructs the submitted cut rows and restores their values.
-
-This allows users to correct invalid entries without re-entering the entire form.
-
-JavaScript supports removing restored dynamic cut rows.
+If the export database query fails, the application displays an error response with HTTP **503** instead of returning a CSV download.
 
 ## Automated Testing
 
-CutFlow uses Python's built-in `unittest` framework to verify optimization functions and Flask route behavior.
+The project currently has **33 automated test methods**, implemented using Python's built-in `unittest` framework.
 
-The current automated test suite contains **10 tests**.
+### Optimizer Tests — 13
 
-### Optimization Algorithm Tests
+These tests verify:
 
-**1. `test_calculate_utilization()`**
-- Verifies material utilization calculations.
-- Compares the result against an expected percentage.
+- Waste calculations
+- Utilization calculations
+- Quantity expansion
+- Merge Sort correctness
+- Merge Sort edge cases
+- First Fit Decreasing allocation
+- Large stock lengths
+- Empty inputs
+- Exact stock fills
+- Separate stock allocation
+- Decimal cut lengths
+- Input preservation and stock-capacity constraints
+- Floating-point precision regression
 
-**2. `test_calculate_waste()`**
-- Verifies total material waste calculations.
-- Checks unused material across stock pieces.
+### Flask Route Tests — 20
 
-**3. `test_expand_cuts()`**
-- Verifies that quantities are expanded into individual cuts.
-- Compares the expanded list against expected values.
+These tests verify:
 
-**4. `test_merge_sort()`**
-- Verifies that Merge Sort orders cuts in descending order.
-- Confirms the output matches the expected sequence.
-
-### Flask Route & Validation Tests
-
-**5. `test_database_rollback()`**
-- Simulates a failed database commit using `unittest.mock`.
-- Verifies that `rollback()` is called.
-- Checks that the application returns an error message.
-
-**6. `test_empty_cuts()`**
-- Submits an optimization request without cut entries.
-- Verifies that the application rejects the empty cut list.
-
-**7. `test_invalid_cut_length()`**
-- Submits a non-numeric cut length.
-- Verifies the expected validation message.
-
-**8. `test_negative_cut_length()`**
-- Submits a negative cut length.
-- Verifies rejection of negative values.
-- Checks that the previously submitted stock length is preserved.
-
-**9. `test_cut_length_exceeds_stock_length()`**
-- Submits a cut length greater than the stock length.
-- Verifies that the application rejects the input.
-
-**10. `test_preserve_cut_values()`**
-- Submits multiple cut lengths and quantities.
-- Triggers a validation error.
-- Verifies that previously submitted values remain in the HTML response.
+- Home page rendering
+- Stock length validation
+- Cut length validation
+- Quantity validation
+- Missing and mismatched inputs
+- Form value preservation
+- Successful optimization and database persistence
+- Database transaction rollback
+- Exact stock fills
+- Empty optimization history
+- History ordering and result limits
+- CSV export functionality
+- CSV export with an empty database
+- CSV data integrity and ordering
+- Database failure handling
 
 ### Testing Configuration
 
-CutFlow uses the Flask Application Factory Pattern.
+Tests use:
 
-The `create_app()` function accepts an optional test configuration.
+- Python `unittest`
+- `unittest.mock`
+- Flask test client
+- SQLite in-memory database
+- Flask application factory pattern
 
-This allows tests to use an isolated SQLite in-memory database configuration instead of the local PostgreSQL database.
+The SQLite test database provides isolation from the local PostgreSQL database.
 
-Flask's test client sends simulated HTTP requests without starting a development server.
+`unittest.mock` simulates database failures without interrupting a live PostgreSQL instance.
 
-`unittest.mock` allows database failures to be simulated without intentionally interrupting PostgreSQL.
-
-The rollback test verifies application behavior using mocks rather than testing actual PostgreSQL transaction recovery.
+`subTest()` is used to validate multiple scenarios within individual test methods.
 
 ### Running Tests
 
-From the project root, run:
+From the project root, execute:
 
 ```bash
 python -m unittest discover -s tests -v
 ```
 
-Latest verified local test result:
+**Latest locally verified result:**
 
 ```text
-Ran 10 tests in 0.195s
+----------------------------------------------------------------------
+Ran 33 tests in 0.289s
 
 OK
 ```
 
-All 10 automated tests passed.
+All 33 automated tests passed locally.
 
-Additional test coverage for database read failures, invalid quantities, unusual inputs, and frontend interactions is planned.
+Automated GitHub Actions CI has not yet been configured. The existing SQLite tests do not replace separate integration testing against PostgreSQL.
 
-## Application Configuration & Security
-
-CutFlow uses environment variables to keep sensitive configuration values outside the source code.
-
-The application loads environment variables using `python-dotenv`.
-
-The Flask `SECRET_KEY` and PostgreSQL connection credentials are stored in a local `.env` file.
-
-The `.env` file is excluded from version control through `.gitignore`.
-
-The Flask secret key is used to cryptographically sign session data and protect its integrity when Flask session features are used.
-
-A separate test configuration allows automated tests to run without requiring production database credentials or the application's real secret key.
-
-For production deployment, environment variables and secrets will be configured through the hosting provider rather than committed to the repository.
-
-## Running the Project
+## Running the Project Locally
 
 ### Prerequisites
 
-- Python 3.12 or compatible version
+- Python 3.12
 - PostgreSQL
 - Git
 
@@ -415,7 +279,7 @@ cd cutflow
 python -m venv .venv
 ```
 
-Activate the environment using Windows Git Bash:
+Activate the environment on Windows using Git Bash:
 
 ```bash
 source .venv/Scripts/activate
@@ -431,7 +295,7 @@ python -m pip install -r requirements.txt
 
 Ensure PostgreSQL is installed and running.
 
-Connect to PostgreSQL and create the application database:
+Create a database:
 
 ```sql
 CREATE DATABASE cutflow_db;
@@ -450,34 +314,20 @@ DB_PASSWORD=your_postgresql_password
 SECRET_KEY=your_generated_secret_key
 ```
 
-Replace the placeholders with your local PostgreSQL credentials and a randomly generated secret key.
+Replace the placeholders with your local PostgreSQL credentials.
 
-Generate a secure Flask secret key using:
+Generate a secure Flask secret key:
 
 ```bash
 python -c "import secrets; print(secrets.token_hex(32))"
 ```
 
-Do not commit the `.env` file or share real database credentials and secret keys.
-
-The `.gitignore` file excludes local environment files and Python-generated artifacts.
-
-A dedicated database user with limited permissions is recommended for production deployments.
+**Never commit `.env` files or real database credentials to GitHub.**
 
 ### 6. Apply Database Migrations
 
-Run:
-
 ```bash
 python -m flask --app run db upgrade
-```
-
-This applies the existing migrations and creates the required database tables.
-
-To check the current migration revision:
-
-```bash
-flask db current
 ```
 
 ### 7. Run the Application
@@ -488,142 +338,87 @@ python run.py
 
 Open the application in your browser:
 
-```text
+**Optimizer:**
+
 http://127.0.0.1:5000/
-```
 
-Optimization History:
+**Optimization History:**
 
-```text
 http://127.0.0.1:5000/history
-```
 
-The application currently runs using Flask's development server and a local PostgreSQL database.
+**CSV Export:**
+
+http://127.0.0.1:5000/export
+
+## Current Limitations
+
+- Only one stock length is supported per optimization.
+- Stock inventory is assumed to be unlimited.
+- Cutting blade thickness (*kerf*) is not yet considered.
+- The database stores optimization summaries rather than complete cutting layouts.
+- The UI currently visualizes the last stock piece rather than the full allocation.
+- Large quantities are not yet limited by a dedicated backend cap.
+- The application has not yet been publicly deployed.
+- The application is not intended for production manufacturing use.
 
 ## Development Roadmap
 
-CutFlow is being developed incrementally, with a focus on reliability, maintainability, and practical functionality.
-
-The development phases are organized in the following order:
-
-**Validation & Error Handling → CSV Export → Visualization → REST API → Deployment**
-
 ### Completed
 
+- [x] Flask application factory and web interface
 - [x] Custom Merge Sort implementation
 - [x] First Fit Decreasing optimization algorithm
-- [x] Flask web application
-- [x] Dynamic JavaScript input rows
-- [x] Text-based cutting layout
-- [x] Material waste and utilization calculations
+- [x] Backend numeric and form validation
+- [x] Dynamic JavaScript cut inputs
+- [x] Form value preservation after validation errors
 - [x] PostgreSQL database integration
 - [x] SQLAlchemy ORM models
-- [x] Alembic database migrations
-- [x] Automatic optimization result persistence
-- [x] Optimization History page
-- [x] Display the 10 most recent optimization results
-- [x] Basic navigation and About section
-- [x] Flask application factory with configurable test settings
-- [x] Environment-based Flask secret key configuration
-- [x] 10 automated tests using unittest
+- [x] Flask-Migrate and Alembic migrations
+- [x] Database transaction rollback
+- [x] Database query failure handling
+- [x] Optimization history page
+- [x] Display the latest 10 optimization results
+- [x] CSV export of all saved optimization results
+- [x] CSV export error handling
+- [x] Optimization summary and last-stock visualization
+- [x] Decimal-based floating-point precision fix
+- [x] Regression testing for floating-point errors
+- [x] 33 automated tests using unittest
 
-### Phase 1 — Improved Validation & Error Handling (Mostly Completed)
+### Next Steps
 
-**Goal:** Improve application reliability and prevent unexpected server errors.
-
-- [x] Implement try/except handling for invalid numeric input
-- [x] Handle empty or missing form values
-- [x] Reject non-finite stock and cut lengths
-- [x] Improve validation error messages displayed to users
-- [x] Implement database transaction rollback handling
-- [x] Handle optimization result commit failures
-- [x] Add tests for invalid input and edge cases
-- [x] Preserve submitted stock length after validation errors
-- [x] Preserve dynamically submitted cut lengths and quantities
-- [x] Simulate database commit failures using unittest.mock
-- [ ] Add graceful handling for database read failures on the History page
-- [ ] Expand tests for invalid quantities and additional edge cases
-- [ ] Add further frontend interaction tests
-
-### Phase 2 — CSV Export (Next)
-
-**Goal:** Allow users to download optimization results for external use.
-
-- [ ] Implement CSV file generation
-- [ ] Add a Download CSV button
-- [ ] Export optimization summary data
-- [ ] Include meaningful column headers
-- [ ] Format numerical values consistently
-- [ ] Validate exported results through automated tests
-
-### Phase 3 — Visual Cutting Layout
-
-**Goal:** Improve how optimization results are presented.
-
-- [ ] Create graphical representations of stock pieces
-- [ ] Display individual cuts as proportional segments
-- [ ] Visually distinguish used material from remaining waste
-- [ ] Display material utilization percentages
-- [ ] Improve responsive layout for smaller screens
-- [ ] Improve accessibility and visual clarity
-
-### Phase 4 — REST API
-
-**Goal:** Allow external applications to access the CutFlow optimization engine.
-
-- [ ] Create a REST API endpoint such as `POST /api/optimize`
-- [ ] Accept optimization inputs in JSON format
-- [ ] Return optimization results as JSON
-- [ ] Provide meaningful API validation errors
-- [ ] Reuse the existing optimization algorithms
-- [ ] Implement API endpoint tests
-- [ ] Document API requests and responses
-
-The REST API will allow other applications and scripts to interact with the CutFlow optimization engine without using the HTML interface.
-
-### Phase 5 — Deployment
-
-**Goal:** Make CutFlow publicly accessible.
-
-- [ ] Prepare production configuration
-- [ ] Configure secure environment variables
-- [ ] Set up a production WSGI server
-- [ ] Configure a hosted PostgreSQL database
-- [ ] Apply database migrations in production
-- [ ] Deploy the application to a hosting platform
-- [ ] Test the deployed application
-- [ ] Add the live application URL to the README
-- [ ] Connect the deployed application to the personal portfolio
+- [ ] Implement GitHub Actions CI for automated testing
+- [ ] Introduce input-size limits and additional reliability checks
+- [ ] Improve cutting layout visualization and accessibility
+- [ ] Implement JSON REST API (`POST /api/optimize`)
+- [ ] Add automated REST API tests
+- [ ] Prepare production deployment configuration
+- [ ] Deploy Flask application with hosted PostgreSQL
+- [ ] Add live application URL and screenshots to README
+- [ ] Connect the live project to personal portfolio
 
 ### Potential Future Enhancements
 
-- [ ] Store complete cutting layouts and original input data
+- [ ] Save complete cutting layouts and original inputs
 - [ ] Support multiple stock lengths
-- [ ] Support limited material inventory
-- [ ] Include cutting blade thickness (kerf)
-- [ ] Add material and project management functionality
-- [ ] Expand automated test coverage
+- [ ] Support limited stock inventory
+- [ ] Account for cutting blade thickness (kerf)
+- [ ] Add project and material management functionality
+- [ ] Explore additional optimization strategies
+- [ ] Benchmark optimization performance
 
 ## Project Status
 
-CutFlow is currently under active development.
+CutFlow is an actively developed software engineering portfolio project combining algorithm design, backend development, database persistence, error handling, and automated testing.
 
-The application includes a functional optimization engine, Flask web interface, dynamic JavaScript inputs, cutting layout display, and PostgreSQL integration.
+The current application includes a functional cutting optimizer, web interface, PostgreSQL integration, optimization history, CSV export, and 33 locally passing automated tests.
 
-Optimization summaries are automatically saved using SQLAlchemy ORM, and database schema changes are managed through Alembic migrations.
-
-The application includes an Optimization History page, improved backend validation, database rollback handling, form value preservation, and 10 passing automated tests.
-
-The next development phase will focus on CSV export functionality, alongside additional reliability improvements.
-
-CutFlow is currently a portfolio project and is not intended for production manufacturing use.
-
-Feedback and suggestions are welcome through the project's GitHub repository.
+The project is not intended for production manufacturing use.
 
 ## Author
 
 **Kacper Popek**
 
-Software Engineering student focused on Python, backend development, data structures, algorithms, relational databases, and practical software engineering solutions.
+Software Engineering student interested in backend development, data structures, algorithms, relational databases, and engineering-focused software.
 
 **GitHub:** https://github.com/Monsyerz
