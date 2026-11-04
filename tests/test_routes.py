@@ -20,12 +20,14 @@ class TestRoutes(unittest.TestCase):
         })
 
         self.client = self.app.test_client()
+
         with self.app.app_context():
             db.create_all()
     def tearDown(self):
         with self.app.app_context():
             db.session.remove()
             db.drop_all()
+            db.engine.dispose()
 
     def test_database_rollback(self):
 
@@ -164,3 +166,122 @@ class TestRoutes(unittest.TestCase):
         self.assertNotIn("Content-Disposition", response.headers)
         self.assertNotIn(b"No optimization history yet.", response.data)
         self.assertNotIn(b"Download CSV", response.data)
+
+
+    def test_home_page(self):
+        response = self.client.get("/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"Cut Optimizer", response.data)
+
+    def test_invalid_stock_lengths(self):
+        cases = [
+            (None, b"Please enter a valid stock length."),
+            ("", b"Please enter a valid stock length."),
+            ("abc", b"Stock length must be a valid number."),
+            ("0", b"Stock length must be a positive number."),
+            ("-20", b"Stock length must be a positive number."),
+            ("nan", b"Stock length must be a positive number."),
+            ("inf", b"Stock length must be a positive number."),
+            ("-inf", b"Stock length must be a positive number.")
+        ]
+
+        for value, message in cases:
+            with self.subTest(stock_length=value):
+                data = {
+                    "cut_length": "10",
+                    "quantity": "2"
+                }
+
+                if value is not None:
+                    data["stock_length"] = value
+
+                response = self.client.post("/", data=data)
+
+                self.assertEqual(response.status_code, 200)
+                self.assertIn(message, response.data)
+
+                with self.app.app_context():
+                    self.assertEqual(
+                        OptimizationResult.query.count(), 0
+                    )
+
+    def test_zero_and_non_finite_cut_lengths(self):
+        for value in ["0", "nan", "inf", "-inf"]:
+            with self.subTest(cut_length=value):
+                response = self.client.post("/", data={
+                    "stock_length": "20",
+                    "cut_length": value,
+                    "quantity": "2"
+                })
+
+                self.assertEqual(response.status_code, 200)
+                self.assertIn(
+                    b"Cut lengths must be positive numbers.",
+                    response.data
+                )
+
+                with self.app.app_context():
+                    self.assertEqual(
+                        OptimizationResult.query.count(), 0
+                    )
+
+    def test_invalid_quantities(self):
+        conversion_error = (
+            b"Cut length must be a valid number "
+            b"and quantity must be a whole number."
+        )
+
+        cases = [
+            ("0", b"Quantities must be positive integers."),
+            ("-2", b"Quantities must be positive integers."),
+            ("1.5", conversion_error),
+            ("abc", conversion_error),
+            ("", conversion_error)
+        ]
+
+        for value, message in cases:
+            with self.subTest(quantity=value):
+                response = self.client.post("/", data={
+                    "stock_length": "20",
+                    "cut_length": "10",
+                    "quantity": value
+                })
+
+                self.assertEqual(response.status_code, 200)
+                self.assertIn(message, response.data)
+
+                with self.app.app_context():
+                    self.assertEqual(
+                        OptimizationResult.query.count(), 0
+                    )
+
+    def test_mismatched_cut_lengths_and_quantities(self):
+        cases = [
+            (["10", "5"], ["2"]),
+            (["10"], ["2", "3"]),
+            (["10"], [])
+        ]
+
+        for lengths, quantities in cases:
+            with self.subTest(
+                lengths=lengths,
+                quantities=quantities
+            ):
+                response = self.client.post("/", data={
+                    "stock_length": "20",
+                    "cut_length": lengths,
+                    "quantity": quantities
+                })
+
+                self.assertEqual(response.status_code, 200)
+                self.assertIn(
+                    b"Each cut length must have a quantity.",
+                    response.data
+                )
+
+                with self.app.app_context():
+                    self.assertEqual(
+                        OptimizationResult.query.count(), 0
+                    )
+
