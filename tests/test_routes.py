@@ -285,3 +285,42 @@ class TestRoutes(unittest.TestCase):
                         OptimizationResult.query.count(), 0
                     )
 
+    def test_successful_optimization_saves_result(self):
+        response = self.client.post("/", data={
+            "stock_length": "20",
+            "cut_length": ["5", "15", "7", "10.5"],
+            "quantity": ["2", "2", "1", "3"]
+        })
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"Total Stocks: 5", response.data)
+        self.assertIn(b"Total Cuts: 8", response.data)
+        self.assertIn(b"Total Cut Length: 78.50", response.data)
+        self.assertIn(b"Total Waste: 21.50", response.data)
+        self.assertIn(b"Overall Utilization: 78.50%", response.data)
+
+        with self.app.app_context():
+            self.assertEqual(OptimizationResult.query.count(), 1)
+
+            result = OptimizationResult.query.one()
+
+            self.assertEqual(result.stocks_used, 5)
+            self.assertAlmostEqual(result.waste, 21.5)
+            self.assertAlmostEqual(result.utilization, 78.5)
+
+    def test_cut_equal_to_stock_length(self):
+        response = self.client.post("/", data={
+            "stock_length": "20",
+            "cut_length": "20",
+            "quantity": "2"
+        })
+
+        self.assertEqual(response.status_code, 200)
+
+        with self.app.app_context():
+            result = OptimizationResult.query.one()
+
+            self.assertEqual(result.stocks_used, 2)
+            self.assertAlmostEqual(result.waste, 0)
+            self.assertAlmostEqual(result.utilization, 100)
+
