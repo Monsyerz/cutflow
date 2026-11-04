@@ -143,17 +143,32 @@ def history():
         ).limit(10).all()
         return render_template("history.html", results=results)
     except SQLAlchemyError:
-        return render_template("history.html", results=[], error="Unable to fetch optimization history.")
+        return render_template(
+            "history.html",
+            results=[],
+            error="Unable to fetch optimization history."
+        )
 
-
+    
 @main.route("/export")
 def export_history():
-    results=OptimizationResult.query.order_by(
-        OptimizationResult.created_at.desc()
-    ).all()
+    try:
+        results = OptimizationResult.query.order_by(
+            OptimizationResult.created_at.desc()
+        ).all()
+    except SQLAlchemyError:
+        return render_template(
+            "history.html",
+            results=[],
+            error="Unable to export optimization history. Please try again."
+        ), 503
+
     output = StringIO()
     csv_writer = csv.writer(output)
-    csv_writer.writerow(["ID", "Stocks Used", "Waste", "Utilization", "Created At"])
+    csv_writer.writerow([
+        "ID", "Stocks Used", "Waste", "Utilization", "Created At"
+    ])
+
     for result in results:
         csv_writer.writerow([
             result.id,
@@ -162,11 +177,12 @@ def export_history():
             result.utilization,
             result.created_at
         ])
+
     csv_data = output.getvalue()
     return Response(
         csv_data,
         mimetype="text/csv",
-        headers={"Content-Disposition": "attachment; filename=history.csv"
+        headers={
+            "Content-Disposition": "attachment; filename=history.csv"
         }
     )
-    

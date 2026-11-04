@@ -143,3 +143,20 @@ class TestRoutes(unittest.TestCase):
         )
 
         self.assertNotIn(b"Download CSV", response.data)
+
+    def test_csv_export_database_error(self):
+        with patch(
+            "flask_sqlalchemy.query.Query.all",
+            side_effect=SQLAlchemyError("Simulated database failure")
+        ):
+            response = self.client.get("/export")
+
+        self.assertEqual(response.status_code, 503)
+        self.assertIn(
+            b"Unable to export optimization history",
+            response.data
+        )
+        self.assertEqual(response.mimetype, "text/html")
+        self.assertNotIn("Content-Disposition", response.headers)
+        self.assertNotIn(b"No optimization history yet.", response.data)
+        self.assertNotIn(b"Download CSV", response.data)
