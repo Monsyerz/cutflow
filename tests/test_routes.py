@@ -3,6 +3,10 @@ from unittest.mock import patch
 from sqlalchemy.exc import SQLAlchemyError
 from app.db_models import OptimizationResult
 
+import csv
+from datetime import datetime
+from io import StringIO
+
 from app import create_app
 from app.extensions import db
 
@@ -16,6 +20,13 @@ class TestRoutes(unittest.TestCase):
         })
 
         self.client = self.app.test_client()
+        with self.app.app_context():
+            db.create_all()
+    def tearDown(self):
+        with self.app.app_context():
+            db.session.remove()
+            db.drop_all()
+
     def test_database_rollback(self):
 
         with patch.object(
@@ -108,7 +119,6 @@ class TestRoutes(unittest.TestCase):
 
     def test_csv_export(self):
         with self.app.app_context():
-            db.create_all()
 
             result = OptimizationResult(
                 stocks_used=2,
@@ -123,7 +133,6 @@ class TestRoutes(unittest.TestCase):
             self.assertIn(b"2,5.0,87.5", response.data)
             self.assertEqual(response.mimetype, "text/csv")
     
-    
     def test_history_database_error(self):
         with patch(
             "flask_sqlalchemy.query.Query.all",
@@ -133,15 +142,10 @@ class TestRoutes(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertIn(
-            b"Unable to fetch optimization history",                
+            b"Unable to fetch optimization history",
             response.data
         )
-
-        self.assertNotIn(
-            b"No optimization history yet.",
-            response.data
-        )
-
+        self.assertNotIn(b"No optimization history yet.", response.data)
         self.assertNotIn(b"Download CSV", response.data)
 
     def test_csv_export_database_error(self):
