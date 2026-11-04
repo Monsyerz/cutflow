@@ -4,7 +4,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from app.db_models import OptimizationResult
 
 import csv
-from datetime import datetime
+from datetime import datetime, timedelta
 from io import StringIO
 
 from app import create_app
@@ -324,3 +324,119 @@ class TestRoutes(unittest.TestCase):
             self.assertAlmostEqual(result.waste, 0)
             self.assertAlmostEqual(result.utilization, 100)
 
+
+    def test_empty_history(self):
+        response = self.client.get("/history")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(
+            b"No optimization history yet.",
+            response.data
+        )
+        self.assertNotIn(b"Download CSV", response.data)
+        self.assertNotIn(
+            b"Unable to fetch optimization history",
+            response.data
+        )
+
+    def test_history_shows_latest_ten_results(self):
+        base_time = datetime(2026, 1, 1, 12, 0, 0)
+
+        with self.app.app_context():
+            # Newest inserted first to test date ordering.
+            for index in reversed(range(12)):
+                db.session.add(OptimizationResult(
+                    stocks_used=index + 1,
+                    waste=5.0,
+                    utilization=75.0,
+                    created_at=base_time + timedelta(minutes=index)
+                ))
+
+            db.session.commit()
+
+            expected_ids = [
+                result.id
+                for result in OptimizationResult.query.order_by(
+                    OptimizationResult.created_at.desc()
+                ).all()
+            ]
+
+        response = self.client.get("/history")
+        html = response.get_data(as_text=True)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("Download CSV", html)
+        self.assertEqual(html.count("<p>Run #"), 10)
+
+        positions = []
+
+        for result_id in expected_ids[:10]:
+            marker = f"<p>Run #{result_id}</p>"
+            self.assertIn(marker, html)
+            positions.append(html.index(marker))
+
+        self.assertEqual(positions, sorted(positions))
+
+        for result_id in expected_ids[10:]:
+            self.assertNotIn(f"<p>Run #{result_id}</p>", html)
+
+    def test_csv_export_empty_database(self):
+        response = self.client.get("/export")
+        rows = list(csv.reader(
+            StringIO(response.get_data(as_text=True))
+        ))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.mimetype, "text/csv")
+        self.assertEqual(
+            response.headers["Content-Disposition"],
+            "attachment; filename=history.csv"
+        )
+        self.assertEqual(rows, [[
+            "ID", "Stocks Used", "Waste", "Utilization", "Created At"
+        ]])
+
+    def test_csv_export_includes_all_results_newest_first(self):
+        base_time = datetime(2026, 1, 1, 12, 0, 0)
+        expected_rows = []
+
+        with self.app.app_context():
+            for index in reversed(range(12)):
+                created_at = base_time + timedelta(minutes=index)
+
+                result = OptimizationResult(
+                    stocks_used=index + 1,
+                    waste=2.5,
+                    utilization=87.5,
+                    created_at=created_at
+                )
+
+                db.session.add(result)
+                db.session.flush()
+
+                expected_rows.append([
+                    str(result.id),
+                    str(index + 1),
+                    "2.5",
+                    "87.5",
+                    str(created_at)
+                ])
+
+            db.session.commit()
+
+        response = self.client.get("/export")
+        rows = list(csv.reader(
+            StringIO(response.get_data(as_text=True))
+        ))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.mimetype, "text/csv")
+        self.assertEqual(
+            response.headers["Content-Disposition"],
+            "attachment; filename=history.csv"
+        )
+        self.assertEqual(rows[0], [
+            "ID", "Stocks Used", "Waste", "Utilization", "Created At"
+        ])
+        self.assertEqual(len(rows), 13)
+        self.assertEqual(rows[1:], expected_rows)
