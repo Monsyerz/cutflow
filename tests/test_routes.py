@@ -122,3 +122,24 @@ class TestRoutes(unittest.TestCase):
             self.assertIn(b"ID,Stocks Used,Waste,Utilization,Created At", response.data)
             self.assertIn(b"2,5.0,87.5", response.data)
             self.assertEqual(response.mimetype, "text/csv")
+    
+    
+    def test_history_database_error(self):
+        with patch(
+            "flask_sqlalchemy.query.Query.all",
+            side_effect=SQLAlchemyError("Simulated database failure")
+        ):
+            response = self.client.get("/history")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(
+            b"Unable to fetch optimization history",                
+            response.data
+        )
+
+        self.assertNotIn(
+            b"No optimization history yet.",
+            response.data
+        )
+
+        self.assertNotIn(b"Download CSV", response.data)

@@ -137,10 +137,14 @@ def home():
 
 @main.route("/history")
 def history():
-    results = OptimizationResult.query.order_by(
-        OptimizationResult.created_at.desc()
-    ).limit(10).all()
-    return render_template("history.html", results=results)
+    try:
+        results = OptimizationResult.query.order_by(
+            OptimizationResult.created_at.desc()
+        ).limit(10).all()
+        return render_template("history.html", results=results)
+    except SQLAlchemyError:
+        return render_template("history.html", results=[], error="Unable to fetch optimization history.")
+
 
 @main.route("/export")
 def export_history():
