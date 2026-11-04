@@ -1,3 +1,4 @@
+from decimal import Decimal
 def expand_cuts(cuts):
     expanded=[]
     for cut in cuts:
@@ -38,31 +39,53 @@ def merge(left, right):
 
 def optimize_cuts(cuts, stock_length):
     stocks_used = []
+    capacity = Decimal(str(stock_length))
 
     for cut in cuts:
         placed = False
+        cut_value = Decimal(str(cut))
+
         for stock in stocks_used:
-            if sum(stock) + cut <= stock_length:
+            used_length = sum(
+                Decimal(str(piece)) for piece in stock
+            )
+
+            if used_length + cut_value <= capacity:
                 stock.append(cut)
-                placed = True   
+                placed = True
                 break
+
         if not placed:
             stocks_used.append([cut])
+
     return stocks_used
 
 def calculate_waste(stocks_used, stock_length):
-    waste=0
+    capacity = Decimal(str(stock_length))
+    waste = Decimal("0")
+
     for stock in stocks_used:
-        waste+=stock_length-sum(stock)
-    return waste
+        used = sum(
+            Decimal(str(piece)) for piece in stock
+        )
+        waste += capacity - used
+
+    return float(waste)
 
 def calculate_utilization(stocks_used, stock_length):
-    total_cut_length = sum(sum(stock) for stock in stocks_used)
-    total_stock_length = len(stocks_used) * stock_length
-
-    utilization = (
-        (total_cut_length / total_stock_length) * 100
-        if total_stock_length > 0
-        else 0
+    total_stock_length = (
+        Decimal(str(stock_length)) * len(stocks_used)
     )
-    return utilization
+
+    if total_stock_length <= 0:
+        return 0
+
+    total_cut_length = sum(
+        Decimal(str(cut))
+        for stock in stocks_used
+        for cut in stock
+    )
+
+    return float(
+        total_cut_length / total_stock_length * 100
+    )

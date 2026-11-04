@@ -128,3 +128,16 @@ class TestOptimizer(unittest.TestCase):
             calculate_waste(stocks, 15),
             expected_waste
         )
+    def test_floating_point_precision(self):
+        cuts = [0.2, 0.1]
+        stock_length = 0.3
+
+        stocks = optimize_cuts(cuts, stock_length)
+
+        self.assertEqual(stocks, [[0.2, 0.1]])
+        self.assertEqual(
+            calculate_waste(stocks, stock_length), 0
+        )
+        self.assertEqual(
+            calculate_utilization(stocks, stock_length), 100
+        )
