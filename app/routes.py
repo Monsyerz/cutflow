@@ -63,6 +63,7 @@ def home():
 
 
         cuts = []
+        totakl_quantity = 0
 
         for cut_length_raw, quantity_raw in zip(cut_lengths, quantities):
 
@@ -86,10 +87,19 @@ def home():
                     "index.html",
                     error="Cut lengths cannot exceed stock length."
                 )
+
+            total_quantity = 0
+
             if quantity <= 0:
                 return render_template(
                     "index.html",
                     error="Quantities must be positive integers."
+                )
+            total_quantity += quantity
+            if total_quantity > 1000:
+                return render_template(
+                    "index.html",
+                    error="Too many cuts requested. Please limit to 1000 cuts."
                 )
             
             cuts.append(Cut(cut_length, quantity))

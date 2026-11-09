@@ -440,3 +440,14 @@ class TestRoutes(unittest.TestCase):
         ])
         self.assertEqual(len(rows), 13)
         self.assertEqual(rows[1:], expected_rows)
+    def test_too_many_cuts_rejected(self):
+        response=self.client.post("/", data={
+            "stock_length": "20",
+            "cut_length":"5",
+            "quantity": "1001"
+        })
+        self.assertIn(b"Too many cuts requested. Please limit to 1000 cuts.", response.data)
+        with self.app.app_context():
+            self.assertEqual(
+                OptimizationResult.query.count(),0
+                )
