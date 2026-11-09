@@ -63,7 +63,7 @@ def home():
 
 
         cuts = []
-        totakl_quantity = 0
+        total_quantity = 0
 
         for cut_length_raw, quantity_raw in zip(cut_lengths, quantities):
 
@@ -87,8 +87,6 @@ def home():
                     "index.html",
                     error="Cut lengths cannot exceed stock length."
                 )
-
-            total_quantity = 0
 
             if quantity <= 0:
                 return render_template(
