@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, Response
+from flask import Blueprint, render_template, request, Response, jsonify
 from app.models import Cut
 from app.optimizer import (
     expand_cuts,
@@ -194,3 +194,36 @@ def export_history():
             "Content-Disposition": "attachment; filename=history.csv"
         }
     )
+
+@main.route("/api/optimize", methods=["POST"])
+def optimize_api():
+    data = request.get_json()
+
+    stock_length = data.get("stock_length")
+    cuts = data.get("cuts")
+
+    cuts_data = []
+
+    for cut in cuts:
+        length = cut.get("length")
+        quantity = cut.get("quantity")
+
+        new_cut = Cut(length, quantity)
+        cuts_data.append(new_cut)
+    
+    expanded = expand_cuts(cuts_data)
+    sorted_cuts = merge_sort(expanded)
+    stocks = optimize_cuts(sorted_cuts, stock_length)
+    stocks_used = len(stocks)
+    total_cuts = len(expanded)
+    waste = calculate_waste(stocks, stock_length)
+    utilization = calculate_utilization(stocks, stock_length)
+    total_cut_length = sum(expanded)
+    
+    return jsonify({
+    "stocks_used": stocks_used,
+    "total_cuts": total_cuts,
+    "waste": waste,
+    "utilization": utilization,
+    "total_cut_length": total_cut_length
+    }), 200
