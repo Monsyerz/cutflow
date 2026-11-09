@@ -451,3 +451,31 @@ class TestRoutes(unittest.TestCase):
             self.assertEqual(
                 OptimizationResult.query.count(),0
                 )
+
+    def test_exactly_1000_cuts_accepted(self):
+        response = self.client.post("/", data={
+            "stock_length": "20",
+            "cut_length": "5",
+            "quantity": "1000"
+        })
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"Total Cuts: 1000", response.data)
+
+        with self.app.app_context():
+            self.assertEqual(
+                OptimizationResult.query.count(), 1
+            )
+
+    
+    def test_combined_quantities_exceed_limit(self):
+        response = self.client.post("/",data={
+            "cut_length": ["5", "10"],
+            "quantity": ["500", "600"],
+            "stock_length": "20"
+        })
+        self.assertIn(b"Too many cuts requested. Please limit to 1000 cuts.", response.data)
+        with self.app.app_context():
+            self.assertEqual(
+                OptimizationResult.query.count(),0
+            )
