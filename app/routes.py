@@ -201,6 +201,9 @@ def optimize_api():
 
     stock_length = data.get("stock_length")
     cuts = data.get("cuts")
+    
+    if not cuts:
+        return jsonify({"error": "Cuts cannot be empty"}), 400
 
     try:
         stock_length = float(stock_length)

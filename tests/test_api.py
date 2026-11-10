@@ -1,4 +1,5 @@
 import unittest
+from urllib import response
 from app import create_app
 
 class TestAPI(unittest.TestCase):
@@ -57,3 +58,14 @@ class TestAPI(unittest.TestCase):
             response.get_json()["error"],
             "Invalid stock length"
         )
+
+    def test_api_empty_cuts(self):
+        response = self.client.post(
+            "/api/optimize",
+            json={
+                "stock_length": 20,
+                "cuts": []
+            }
+        )
+
+        self.assertEqual(response.status_code, 400)
