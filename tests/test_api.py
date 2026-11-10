@@ -1,5 +1,4 @@
 import unittest
-from urllib import response
 from app import create_app
 
 class TestAPI(unittest.TestCase):
@@ -32,7 +31,7 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(result["total_cuts"], 4)
 
 
-    def test_api_invalid_stock_length(self):
+    def test_api_zero_stock_length(self):
         response = self.client.post(
             "/api/optimize",
             json={
@@ -69,3 +68,33 @@ class TestAPI(unittest.TestCase):
         )
 
         self.assertEqual(response.status_code, 400)
+
+
+    def test_api_negative_cut_length(self):
+        response = self.client.post(
+            "/api/optimize",
+            json={
+                "stock_length": 20,
+                "cuts": [
+                    {"length": -5, "quantity": 2}
+                ]
+            }
+        )
+
+        self.assertEqual(response.status_code, 400)
+    def test_api_cut_exceeds_stock_length(self):
+        response = self.client.post(
+            "/api/optimize",
+            json={
+                "stock_length": 20,
+                "cuts": [
+                    {"length": 25, "quantity": 2}
+                ]
+            }
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.get_json()["error"],
+            "Cut length exceeds stock length"
+        )

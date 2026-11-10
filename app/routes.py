@@ -201,7 +201,7 @@ def optimize_api():
 
     stock_length = data.get("stock_length")
     cuts = data.get("cuts")
-    
+
     if not cuts:
         return jsonify({"error": "Cuts cannot be empty"}), 400
 
@@ -217,6 +217,21 @@ def optimize_api():
     for cut in cuts:
         length = cut.get("length")
         quantity = cut.get("quantity")
+
+        if length is None or quantity is None:
+            return jsonify({"error": "Cut length and quantity are required"}), 400
+
+        
+        try:
+            length = float(length)
+        except(ValueError, TypeError):
+            return jsonify({"error": "Invalid cut length"}), 400
+        if length <= 0:
+            return jsonify({"error": "Invalid cut length"}), 400
+
+        if length > stock_length:
+            return jsonify({"error": "Cut length exceeds stock length"}), 400
+
 
         new_cut = Cut(length, quantity)
         cuts_data.append(new_cut)
