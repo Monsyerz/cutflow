@@ -202,6 +202,13 @@ def optimize_api():
     stock_length = data.get("stock_length")
     cuts = data.get("cuts")
 
+    try:
+        stock_length = float(stock_length)
+    except (ValueError, TypeError):
+        return jsonify({"error": "Invalid stock length"}), 400
+    if stock_length<=0:
+        return jsonify({"error": "Invalid stock length"}), 400
+    
     cuts_data = []
 
     for cut in cuts:

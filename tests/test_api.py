@@ -11,6 +11,8 @@ class TestAPI(unittest.TestCase):
         })
 
         self.client = self.app.test_client()
+
+        
     def test_api_optimize_success(self):
         response = self.client.post(
             "/api/optimize",
@@ -27,3 +29,31 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(result["stocks_used"], 2)
         self.assertEqual(result["waste"], 0)
         self.assertEqual(result["total_cuts"], 4)
+
+
+    def test_api_invalid_stock_length(self):
+        response = self.client.post(
+            "/api/optimize",
+            json={
+                "stock_length": 0,
+                "cuts": [{"length": 5, "quantity": 2}]
+            }
+        )
+        self.assertEqual(response.status_code, 400)
+
+    def test_api_invalid_stock_length_string(self):
+        response = self.client.post(
+            "/api/optimize",
+            json={
+                "stock_length": "abc",
+                "cuts": [
+                    {"length": 5, "quantity": 1}
+                ]
+            }
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.get_json()["error"],
+            "Invalid stock length"
+        )
