@@ -201,6 +201,9 @@ def optimize_api():
 
     stock_length = data.get("stock_length")
     cuts = data.get("cuts")
+    
+    if type(cuts) is not list:
+        return jsonify({"error": "Cuts must be a list"}), 400
 
     if not cuts:
         return jsonify({"error": "Cuts cannot be empty"}), 400
@@ -213,6 +216,10 @@ def optimize_api():
         return jsonify({"error": "Invalid stock length"}), 400
     
     cuts_data = []
+
+    for cut in cuts:
+        if type(cut) is not dict:
+            return jsonify({"error": "Each cut must be a dictionary"}), 400
 
     for cut in cuts:
         length = cut.get("length")
