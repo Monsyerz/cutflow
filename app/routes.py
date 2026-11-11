@@ -1,4 +1,5 @@
-from flask import Blueprint, render_template, request, Response
+from flask import Blueprint, render_template, request, Response, jsonify
+
 from app.models import Cut
 from app.optimizer import (
     expand_cuts,
@@ -63,6 +64,7 @@ def home():
 
 
         cuts = []
+        total_quantity = 0
 
         for cut_length_raw, quantity_raw in zip(cut_lengths, quantities):
 
@@ -86,10 +88,17 @@ def home():
                     "index.html",
                     error="Cut lengths cannot exceed stock length."
                 )
+
             if quantity <= 0:
                 return render_template(
                     "index.html",
                     error="Quantities must be positive integers."
+                )
+            total_quantity += quantity
+            if total_quantity > 1000:
+                return render_template(
+                    "index.html",
+                    error="Too many cuts requested. Please limit to 1000 cuts."
                 )
             
             cuts.append(Cut(cut_length, quantity))
@@ -186,3 +195,82 @@ def export_history():
             "Content-Disposition": "attachment; filename=history.csv"
         }
     )
+
+@main.route("/api/optimize", methods=["POST"])
+def optimize_api():
+    data = request.get_json()
+
+    if type(data) is not dict:
+        return jsonify({"error": "JSON body must be an object"}), 400
+
+    stock_length = data.get("stock_length")
+    cuts = data.get("cuts")
+    
+    if type(cuts) is not list:
+        return jsonify({"error": "Cuts must be a list"}), 400
+
+    if not cuts:
+        return jsonify({"error": "Cuts cannot be empty"}), 400
+
+    try:
+        stock_length = float(stock_length)
+    except (ValueError, TypeError):
+        return jsonify({"error": "Invalid stock length"}), 400
+    
+    if not math.isfinite(stock_length) or stock_length <= 0:
+        return jsonify({"error": "Invalid stock length"}), 400
+    
+    cuts_data = []
+    total_quantity = 0
+
+    for cut in cuts:
+        if type(cut) is not dict:
+            return jsonify({"error": "Each cut must be a dictionary"}), 400
+
+        length = cut.get("length")
+        quantity = cut.get("quantity")
+
+        if length is None or quantity is None:
+            return jsonify({"error": "Cut length and quantity are required"}), 400
+
+        
+        try:
+            length = float(length)
+        except(ValueError, TypeError):
+            return jsonify({"error": "Invalid cut length"}), 400
+
+        if not math.isfinite(length) or length <= 0:
+            return jsonify({"error": "Invalid cut length"}), 400
+
+        if length > stock_length:
+            return jsonify({"error": "Cut length exceeds stock length"}), 400
+
+        if type(quantity) is not int:
+            return jsonify({"error": "Invalid cut quantity"}), 400
+
+        if quantity <= 0:
+            return jsonify({"error": "Invalid cut quantity"}), 400
+
+        total_quantity += quantity
+        if total_quantity > 1000:
+            return jsonify({ "error": "Too many cuts requested. Please limit to 1000 cuts."}), 400
+        
+        new_cut = Cut(length, quantity)
+        cuts_data.append(new_cut)
+
+    expanded = expand_cuts(cuts_data)
+    sorted_cuts = merge_sort(expanded)
+    stocks = optimize_cuts(sorted_cuts, stock_length)
+    stocks_used = len(stocks)
+    total_cuts = len(expanded)
+    waste = calculate_waste(stocks, stock_length)
+    utilization = calculate_utilization(stocks, stock_length)
+    total_cut_length = sum(expanded)
+    
+    return jsonify({
+    "stocks_used": stocks_used,
+    "total_cuts": total_cuts,
+    "waste": waste,
+    "utilization": utilization,
+    "total_cut_length": total_cut_length
+    }), 200
