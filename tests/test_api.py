@@ -98,3 +98,35 @@ class TestAPI(unittest.TestCase):
             response.get_json()["error"],
             "Cut length exceeds stock length"
         )
+
+    def test_quantity_validation(self):
+        response = self.client.post(
+            "/api/optimize",
+            json={
+                "stock_length": 20,
+                "cuts": [
+                    {"length": 5, "quantity": 2.5}
+                ]
+            }
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.get_json()["error"],
+            "Invalid cut quantity"
+        )
+    def test_api_zero_quantity(self):
+        response = self.client.post(
+            "/api/optimize",
+            json={
+                "stock_length": 20,
+                "cuts": [
+                    {"length": 5, "quantity": 0}
+                ]
+            }
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.get_json()["error"],
+            "Invalid cut quantity"
+        )

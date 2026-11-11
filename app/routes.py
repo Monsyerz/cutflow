@@ -232,10 +232,14 @@ def optimize_api():
         if length > stock_length:
             return jsonify({"error": "Cut length exceeds stock length"}), 400
 
+        if type(quantity) is not int:
+            return jsonify({"error": "Invalid cut quantity"}), 400
+        if quantity <= 0:
+            return jsonify({"error": "Invalid cut quantity"}), 400
 
         new_cut = Cut(length, quantity)
         cuts_data.append(new_cut)
-    
+
     expanded = expand_cuts(cuts_data)
     sorted_cuts = merge_sort(expanded)
     stocks = optimize_cuts(sorted_cuts, stock_length)
