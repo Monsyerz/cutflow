@@ -220,6 +220,7 @@ def optimize_api():
         return jsonify({"error": "Invalid stock length"}), 400
     
     cuts_data = []
+    total_quantity = 0
 
     for cut in cuts:
         if type(cut) is not dict:
@@ -246,9 +247,14 @@ def optimize_api():
 
         if type(quantity) is not int:
             return jsonify({"error": "Invalid cut quantity"}), 400
+
         if quantity <= 0:
             return jsonify({"error": "Invalid cut quantity"}), 400
 
+        total_quantity += quantity
+        if total_quantity > 1000:
+            return jsonify({ "error": "Too many cuts requested. Please limit to 1000 cuts."}), 400
+        
         new_cut = Cut(length, quantity)
         cuts_data.append(new_cut)
 

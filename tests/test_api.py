@@ -183,3 +183,33 @@ class TestAPI(unittest.TestCase):
             response.get_json()["error"],
             "Invalid cut length"
         )
+    def test_api_too_many_cuts(self):
+        response = self.client.post(
+            "/api/optimize",
+            json={
+                "stock_length": 20,
+                "cuts": [
+                    {"length": 5, "quantity": 1500}
+                ]
+            }
+        )
+
+        self.assertEqual(response.status_code, 400)
+    
+    def test_api_combined_quantities_exceed_limit(self):
+        response = self.client.post(
+            "/api/optimize",
+            json={
+                "stock_length": 20,
+                "cuts": [
+                    {"length": 5, "quantity": 600},
+                    {"length": 10, "quantity": 500}
+                ]
+            }
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.get_json()["error"],
+            "Too many cuts requested. Please limit to 1000 cuts."
+        )
