@@ -1,4 +1,5 @@
 from flask import Blueprint, render_template, request, Response, jsonify
+
 from app.models import Cut
 from app.optimizer import (
     expand_cuts,
@@ -215,6 +216,9 @@ def optimize_api():
     if stock_length<=0:
         return jsonify({"error": "Invalid stock length"}), 400
     
+    if not math.isfinite(stock_length) or stock_length <= 0:
+        return jsonify({"error": "Invalid stock length"}), 400
+    
     cuts_data = []
 
     for cut in cuts:
@@ -233,7 +237,8 @@ def optimize_api():
             length = float(length)
         except(ValueError, TypeError):
             return jsonify({"error": "Invalid cut length"}), 400
-        if length <= 0:
+
+        if not math.isfinite(length) or length <= 0:
             return jsonify({"error": "Invalid cut length"}), 400
 
         if length > stock_length:

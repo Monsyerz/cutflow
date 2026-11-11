@@ -154,3 +154,32 @@ class TestAPI(unittest.TestCase):
             response.get_json()["error"],
             "Cuts must be a list"
         )
+
+    def test_api_nan_stock_length(self):
+        response = self.client.post(
+            "/api/optimize",
+            json={
+                "stock_length": "nan",
+                "cuts": [
+                    {"length": 5, "quantity": 2}
+                ]
+            }
+        )
+
+        self.assertEqual(response.status_code, 400)
+        
+    def test_api_infinite_cut_length(self):
+        response = self.client.post(
+            "/api/optimize",
+            json={
+                "stock_length": 20,
+                "cuts": [
+                    {"length": "inf", "quantity": 2}
+                ]
+                }
+            )
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.get_json()["error"],
+            "Invalid cut length"
+        )
