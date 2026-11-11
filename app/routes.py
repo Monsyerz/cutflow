@@ -200,6 +200,9 @@ def export_history():
 def optimize_api():
     data = request.get_json()
 
+    if type(data) is not dict:
+        return jsonify({"error": "JSON body must be an object"}), 400
+
     stock_length = data.get("stock_length")
     cuts = data.get("cuts")
     
@@ -213,8 +216,6 @@ def optimize_api():
         stock_length = float(stock_length)
     except (ValueError, TypeError):
         return jsonify({"error": "Invalid stock length"}), 400
-    if stock_length<=0:
-        return jsonify({"error": "Invalid stock length"}), 400
     
     if not math.isfinite(stock_length) or stock_length <= 0:
         return jsonify({"error": "Invalid stock length"}), 400
@@ -226,7 +227,6 @@ def optimize_api():
         if type(cut) is not dict:
             return jsonify({"error": "Each cut must be a dictionary"}), 400
 
-    for cut in cuts:
         length = cut.get("length")
         quantity = cut.get("quantity")
 

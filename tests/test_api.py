@@ -99,7 +99,7 @@ class TestAPI(unittest.TestCase):
             "Cut length exceeds stock length"
         )
 
-    def test_quantity_validation(self):
+    def test_api_fractional_quantity(self):
         response = self.client.post(
             "/api/optimize",
             json={
@@ -135,11 +135,17 @@ class TestAPI(unittest.TestCase):
             "/api/optimize",
             json={
                 "stock_length": 20,
-                "cuts":[5,10,15]
+                "cuts":[5, 10, 15]
             }
         )
 
         self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.get_json()["error"],
+            "Each cut must be a dictionary"
+        )
+
+
     def test_api_invalid_cuts_type(self):
         response = self.client.post(
             "/api/optimize",
@@ -176,8 +182,8 @@ class TestAPI(unittest.TestCase):
                 "cuts": [
                     {"length": "inf", "quantity": 2}
                 ]
-                }
-            )
+            }
+        )
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
             response.get_json()["error"],
@@ -212,4 +218,15 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(
             response.get_json()["error"],
             "Too many cuts requested. Please limit to 1000 cuts."
+        )
+    def test_api_invalid_json_structure(self):
+        response = self.client.post(
+            "/api/optimize",
+            json=[]
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.get_json()["error"],
+            "JSON body must be an object"
         )
